@@ -1,7 +1,6 @@
 import { expect, test, describe } from "vitest";
-import { Ship } from "../utils/ship.ts";
-import { Gameboard } from "../utils/gameboard.ts";
 import {
+  Gameboard,
   Outcome,
   type Position,
   type Orientation,
@@ -29,17 +28,17 @@ describe("Gameboard class", () => {
 
   test("should place ship on board", () => {
     const gameboard = new Gameboard();
-    const testShip = new Ship(3);
+    const testLength = 3;
     const testPosition: Position = { x: 1, y: 1 };
     const testOrientation: Orientation = "horizontal";
-    const result = gameboard.placeShip(testShip, testPosition, testOrientation);
+    const result = gameboard.placeShip(testLength, testPosition, testOrientation);
 
     expect(result).toBe(true);
     expect(
       checkBoardValues(
         gameboard,
         testPosition,
-        testShip.length,
+        testLength,
         testOrientation
       )
     ).toBe(true);
@@ -47,15 +46,15 @@ describe("Gameboard class", () => {
 
   test("should not place ship out-of-bounds on board", () => {
     const gameboard = new Gameboard();
-    const result = gameboard.placeShip(new Ship(3), { x: 9, y: 9 }, "vertical");
+    const result = gameboard.placeShip(3, { x: 9, y: 9 }, "vertical");
 
     expect(result).toBe(false);
   });
 
   test("should not place ship on already occupied space", () => {
     const gameboard = new Gameboard();
-    gameboard.placeShip(new Ship(3), { x: 1, y: 1 }, "vertical");
-    const result = gameboard.placeShip(new Ship(3), { x: 1, y: 1 }, "vertical");
+    gameboard.placeShip(3, { x: 1, y: 1 }, "vertical");
+    const result = gameboard.placeShip(3, { x: 1, y: 1 }, "vertical");
 
     expect(result).toBe(false);
   });
@@ -63,7 +62,7 @@ describe("Gameboard class", () => {
   test("should hit ship", () => {
     const gameboard = new Gameboard();
     const testPosition: Position = { x: 1, y: 1 };
-    gameboard.placeShip(new Ship(3), testPosition, "vertical");
+    gameboard.placeShip(3, testPosition, "vertical");
     const result = gameboard.receiveAttack(testPosition);
 
     expect(result).toBe(Outcome.HIT);
@@ -87,7 +86,7 @@ describe("Gameboard class", () => {
   test("should report all ships sunk", () => {
     const gameboard = new Gameboard();
     const testPosition: Position = { x: 1, y: 1 };
-    gameboard.placeShip(new Ship(1), testPosition, "vertical");
+    gameboard.placeShip(1, testPosition, "vertical");
     gameboard.receiveAttack(testPosition);
 
     expect(gameboard.allShipsSunk()).toBe(true);
@@ -96,7 +95,7 @@ describe("Gameboard class", () => {
   test("should not report all ships sunk", () => {
     const gameboard = new Gameboard();
     const testPosition: Position = { x: 1, y: 1 };
-    gameboard.placeShip(new Ship(1), testPosition, "vertical");
+    gameboard.placeShip(1, testPosition, "vertical");
 
     expect(gameboard.allShipsSunk()).toBe(false);
   });

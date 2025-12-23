@@ -6,7 +6,8 @@ export interface ShipSchema {
 }
 
 export class Ship implements ShipSchema {
-  constructor(private readonly _length: number, private _hits: number = 0) {}
+  private _hits = 0
+  constructor(private readonly _length: number) {}
 
   get length(): number {
     return this._length;

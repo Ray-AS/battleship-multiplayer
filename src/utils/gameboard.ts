@@ -35,15 +35,17 @@ export class Gameboard {
     return this._board;
   }
 
-  placeShip(ship: Ship, position: Position, orientation: Orientation) {
+  placeShip(length: number, position: Position, orientation: Orientation) {
     if (
       position.x < 0 ||
-      position.x + ship.length > this.board_size ||
+      position.x + length > this.board_size ||
       position.y < 0 ||
-      position.y + ship.length > this.board_size
+      position.y + length > this.board_size
     ) {
       return false;
     }
+
+    const ship = new Ship(length);
 
     for (let i = 0; i < ship.length; i++) {
       const x = orientation === "horizontal" ? position.x + i : position.x;
