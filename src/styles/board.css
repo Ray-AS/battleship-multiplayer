@@ -9,7 +9,10 @@
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
   border-radius: 5px;
-  box-shadow: 0 0 8px 2px rgba(10, 42, 74, 0.6);
+  box-shadow: 0 0 8px 2px rgba(186,
+    186,
+    186,
+    0.6);
 }
 
 .cell {
@@ -26,6 +29,14 @@
 }
 
 .cell:hover {
-  box-shadow: 0 0 8px 2px rgba(10, 42, 74, 0.6);
+  box-shadow: 0 0 8px 2px rgba(186,
+    186,
+    186,
+    0.6);
+  transform: scale(1.02);
+}
+
+.cell:active {
+  box-shadow: 0 0 8px 2px rgba(43, 43, 43, 0.6);
   transform: scale(1.02);
 }

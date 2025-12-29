@@ -1,11 +1,15 @@
-import type { cellState } from "../models";
+import type { cellState, Position } from "../models";
 
 interface cellProps {
   state: cellState;
+  position: Position;
+  attack: (position: Position) => void;
 }
 
-export default function Cell({ state }: cellProps) {
+export default function Cell({ state, position, attack }: cellProps) {
   let value: string;
+
+  // Determine display value based on cell state
   switch (state) {
     case "empty":
       value = "·";
@@ -24,5 +28,10 @@ export default function Cell({ state }: cellProps) {
       break;
   }
 
-  return <div className="cell">{value}</div>;
+  // console.log(position)
+  return (
+    <div className="cell" onClick={() => attack(position)}>
+      {value}
+    </div>
+  );
 }
