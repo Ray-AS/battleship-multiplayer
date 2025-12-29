@@ -5,10 +5,12 @@ import type { Gameboard } from "../utils/gameboard";
 import { useState } from "react";
 
 interface boardProps {
+  player: "Player 1" | "Player 2";
   boardInstance: Gameboard;
+  handleAllSunk: (player: "Player 1" | "Player 2") => void;
 }
 
-export default function Board({ boardInstance }: boardProps) {
+export default function Board({ player, boardInstance, handleAllSunk }: boardProps) {
   const [board, setBoard] = useState(boardInstance.board);
 
   // Update board instance and board state based on attacked cell position
@@ -22,6 +24,8 @@ export default function Board({ boardInstance }: boardProps) {
     );
 
     setBoard(newBoard);
+
+    if (boardInstance.allShipsSunk()) handleAllSunk(player);
   }
 
   // Iterate over board to create a 2-D array of cells to display
