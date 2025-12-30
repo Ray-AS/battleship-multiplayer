@@ -15,6 +15,12 @@
     0.6);
 }
 
+button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
 .cell {
   display: flex;
   justify-content: center;
@@ -24,19 +30,24 @@
   background-color: rgb(36, 36, 36);
   font-size: 25px;
   font-weight: bolder;
-  cursor: pointer;
+  cursor: crosshair;
   transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
-.cell:hover {
-  box-shadow: 0 0 8px 2px rgba(186,
-    186,
-    186,
-    0.6);
-  transform: scale(1.02);
+.cell:enabled:hover {
+  box-shadow: 0 0 8px 2px rgba(241, 162, 162, 0.6);
+  transform: scale(1.05);
 }
 
-.cell:active {
-  box-shadow: 0 0 8px 2px rgba(43, 43, 43, 0.6);
+.cell:enabled:active {
+  transform: scale(0.95);
+}
+
+.cell:disabled {
+  cursor: default;
+}
+
+.cell:disabled:hover {
+  box-shadow: 0 0 8px 2px rgba(186, 186, 186, 0.6);
   transform: scale(1.02);
 }

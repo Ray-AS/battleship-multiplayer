@@ -26,3 +26,5 @@ export enum Outcome {
   HIT,
   UNAVAILABLE,
 }
+
+export type PlayerType = "Player" | "Computer";

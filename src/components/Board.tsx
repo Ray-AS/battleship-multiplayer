@@ -1,17 +1,23 @@
 import "../styles/board.css";
 import Cell from "./Cell";
-import { type Board, type Position } from "../models";
+import { type Board, type PlayerType, type Position } from "../models";
 import type { Gameboard } from "../utils/gameboard";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { PlayerContext } from "./PlayerContext";
 
 interface boardProps {
-  player: "Player 1" | "Player 2";
+  player: PlayerType;
   boardInstance: Gameboard;
-  handleAllSunk: (player: "Player 1" | "Player 2") => void;
+  handleAllSunk: (player: PlayerType) => void;
 }
 
-export default function Board({ player, boardInstance, handleAllSunk }: boardProps) {
+export default function Board({
+  player,
+  boardInstance,
+  handleAllSunk,
+}: boardProps) {
   const [board, setBoard] = useState(boardInstance.board);
+  const { currentPlayer, setCurrentPlayer } = useContext(PlayerContext)!;
 
   // Update board instance and board state based on attacked cell position
   function attack(position: Position) {
@@ -26,6 +32,8 @@ export default function Board({ player, boardInstance, handleAllSunk }: boardPro
     setBoard(newBoard);
 
     if (boardInstance.allShipsSunk()) handleAllSunk(player);
+
+    setCurrentPlayer((prev) => (prev === "Player" ? "Computer" : "Player"));
   }
 
   // Iterate over board to create a 2-D array of cells to display
@@ -42,6 +50,7 @@ export default function Board({ player, boardInstance, handleAllSunk }: boardPro
             key={y + x}
             state={board[y][x].type}
             position={position}
+            disabled={player === currentPlayer}
             attack={attack}
           />
         );

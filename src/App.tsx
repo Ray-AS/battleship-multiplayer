@@ -1,18 +1,23 @@
 import "./styles/app.css";
 import Board from "./components/Board";
 import { Player } from "./utils/player";
+import { Computer } from "./utils/computer";
 import { useState } from "react";
+import type { PlayerType } from "./models";
+import { PlayerContext } from "./components/PlayerContext";
 
 function App() {
   // Create single instance of player classes (i.e. don't remake on re-renders)
-  const [p1] = useState(() => new Player());
-  const [p2] = useState(() => new Player());
+  const [player] = useState(() => new Player());
+  const [computer] = useState(() => new Computer());
 
-  function handleGameOver(player: "Player 1" | "Player 2") {
-    if (player === "Player 1") {
-      console.log("Player 1 loses!");
-    } else if (player === "Player 2") {
-      console.log("Player 2 loses!");
+  const [currentPlayer, setCurrentPlayer] = useState<PlayerType>("Player")
+
+  function handleGameOver(player: PlayerType) {
+    if (player === "Player") {
+      console.log("Player loses!");
+    } else if (player === "Computer") {
+      console.log("Computer loses!");
     }
   }
 
@@ -22,16 +27,18 @@ function App() {
         <h1>Battleship</h1>
       </header>
       <section className="boards-container">
-        <Board
-          player={"Player 1"}
-          boardInstance={p1.gameboard}
-          handleAllSunk={handleGameOver}
-        />
-        <Board
-          player={"Player 2"}
-          boardInstance={p2.gameboard}
-          handleAllSunk={handleGameOver}
-        />
+        <PlayerContext.Provider value={{currentPlayer, setCurrentPlayer}}>
+          <Board
+            player={"Player"}
+            boardInstance={player.gameboard}
+            handleAllSunk={handleGameOver}
+          />
+          <Board
+            player={"Computer"}
+            boardInstance={computer.gameboard}
+            handleAllSunk={handleGameOver}
+          />
+        </PlayerContext.Provider>
       </section>
     </>
   );

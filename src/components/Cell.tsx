@@ -3,10 +3,11 @@ import type { cellState, Position } from "../models";
 interface cellProps {
   state: cellState;
   position: Position;
+  disabled: boolean;
   attack: (position: Position) => void;
 }
 
-export default function Cell({ state, position, attack }: cellProps) {
+export default function Cell({ state, position, disabled, attack }: cellProps) {
   let value: string;
 
   // Determine display value based on cell state
@@ -30,8 +31,8 @@ export default function Cell({ state, position, attack }: cellProps) {
 
   // console.log(position)
   return (
-    <div className="cell" onClick={() => attack(position)}>
+    <button className="cell" onClick={() => attack(position)} disabled={disabled}>
       {value}
-    </div>
+    </button>
   );
 }
