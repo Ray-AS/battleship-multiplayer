@@ -46,7 +46,8 @@ export default function Board({
             key={`${x}-${y}`}
             state={board[y][x].type}
             position={position}
-            disabled={player === currentPlayer}
+            // Only allow attacking on computer board
+            disabled={player === currentPlayer || player === "Player"}
             hide={player === "Computer"}
             attack={attack}
           />

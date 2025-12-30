@@ -67,11 +67,11 @@ function App() {
         } else {
           setCurrentPlayer("Player");
         }
-      }, 100);
+      }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [currentPlayer, gameOver, player, computer]);
+  }, [currentPlayer, gameOver, player, computer]); // Depends really on currentPlayer; others just to ensure no misbehavior
 
   return (
     <>
