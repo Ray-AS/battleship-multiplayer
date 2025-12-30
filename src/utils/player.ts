@@ -6,7 +6,7 @@ export class Player {
   public gameboard: Gameboard;
   constructor() {
     this.gameboard = new Gameboard();
-    this.populate();
+    // this.populate();
   }
 
   // Just pre-populate ships for now; will add placement functionality later

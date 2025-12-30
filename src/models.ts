@@ -27,4 +27,4 @@ export enum Outcome {
   UNAVAILABLE,
 }
 
-export type PlayerType = "Player" | "Computer";
+export type PlayerType = "Player" | "Computer" | "None";

@@ -71,4 +71,10 @@ export class Gameboard {
   allShipsSunk() {
     return this._ships.every((ship) => ship.isSunk());
   }
+
+  clear() {
+    this._board = Array.from({ length: this.board_size }, () =>
+      Array.from({ length: this.board_size }, () => ({ type: "empty" } as const))
+    );
+  }
 }

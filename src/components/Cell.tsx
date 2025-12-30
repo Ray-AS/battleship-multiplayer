@@ -4,10 +4,11 @@ interface cellProps {
   state: cellState;
   position: Position;
   disabled: boolean;
+  hide: boolean;
   attack: (position: Position) => void;
 }
 
-export default function Cell({ state, position, disabled, attack }: cellProps) {
+export default function Cell({ state, position, disabled, hide, attack }: cellProps) {
   let value: string;
 
   // Determine display value based on cell state
@@ -22,7 +23,8 @@ export default function Cell({ state, position, disabled, attack }: cellProps) {
       value = "-";
       break;
     case "ship":
-      value = "=";
+      if (!hide) value = "=";
+      else value = "·";
       break;
     default:
       value = "~";
@@ -31,7 +33,11 @@ export default function Cell({ state, position, disabled, attack }: cellProps) {
 
   // console.log(position)
   return (
-    <button className="cell" onClick={() => attack(position)} disabled={disabled}>
+    <button
+      className="cell"
+      onClick={() => attack(position)}
+      disabled={disabled}
+    >
       {value}
     </button>
   );

@@ -2,7 +2,7 @@ import "../styles/board.css";
 import Cell from "./Cell";
 import { type Board, type PlayerType, type Position } from "../models";
 import type { Gameboard } from "../utils/gameboard";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { PlayerContext } from "./PlayerContext";
 
 interface boardProps {
@@ -16,24 +16,19 @@ export default function Board({
   boardInstance,
   handleAllSunk,
 }: boardProps) {
-  const [board, setBoard] = useState(boardInstance.board);
+  const board = boardInstance.board;
   const { currentPlayer, setCurrentPlayer } = useContext(PlayerContext)!;
 
   // Update board instance and board state based on attacked cell position
   function attack(position: Position) {
-    console.log(`${player} attacking (${position.x}, ${position.y})`);
+    console.log(`Player attacking (${position.x}, ${position.y})`);
     boardInstance.receiveAttack(position);
 
-    // Create deep copy of updated board instance
-    const newBoard = boardInstance.board.map((row) =>
-      row.map((cell) => ({ ...cell }))
-    );
-
-    setBoard(newBoard);
-
-    if (boardInstance.allShipsSunk()) handleAllSunk(player);
-
-    setCurrentPlayer((prev) => (prev === "Player" ? "Computer" : "Player"));
+    if (boardInstance.allShipsSunk()) {
+      handleAllSunk(player);
+      return;
+    }
+    setCurrentPlayer("Computer");
   }
 
   // Iterate over board to create a 2-D array of cells to display
@@ -47,10 +42,11 @@ export default function Board({
         const position: Position = { x, y };
         row.push(
           <Cell
-            key={y + x}
+            key={`${x}-${y}`}
             state={board[y][x].type}
             position={position}
             disabled={player === currentPlayer}
+            hide={player === "Computer"}
             attack={attack}
           />
         );
