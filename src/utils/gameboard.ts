@@ -87,5 +87,6 @@ export class Gameboard {
     this._board = Array.from({ length: this.board_size }, () =>
       Array.from({ length: this.board_size }, () => ({ type: "empty" } as const))
     );
+    this._ships = [];
   }
 }
