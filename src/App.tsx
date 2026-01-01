@@ -112,7 +112,19 @@ function App() {
                 ? "You defeated the enemy!"
                 : "The enemy defeated you!"}
             </h3>
-            <button onClick={() => setPhase("setup")}>Restart</button>
+            <button
+              onClick={() => {
+                player.gameboard.clear();
+                computer.gameboard.clear();
+
+                setPhase("setup");
+                setWinner("None");
+                setCurrentPlayer("None");
+                setRefreshTrigger((prev) => prev + 1);
+              }}
+            >
+              Restart
+            </button>
           </>
         )}
       </header>
