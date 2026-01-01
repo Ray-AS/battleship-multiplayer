@@ -79,14 +79,13 @@ function App() {
         } else {
           setCurrentPlayer("Player");
         }
-      }, 500);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
   }, [currentPlayer, phase, player, computer]); // Depends really on currentPlayer; others just to ensure no misbehavior
 
   console.log(refreshTrigger);
-  // Add styling to highlight whose turn it is
   return (
     <>
       <header>
@@ -97,7 +96,7 @@ function App() {
             <button onClick={startGame}>Start Game</button>
           </div>
         )}
-        {/* {phase === "playing" && <span>Turn: {turnCount}</span>} */}
+        {phase === "playing" && <span>{currentPlayer === "Player" ? "You are attacking" : "Enemy is attacking"}</span>}
         {phase === "ended" && (
           <>
             <h3>The {winner} wins!</h3>
@@ -107,16 +106,16 @@ function App() {
       </header>
       <section className="boards-container">
         <PlayerContext.Provider value={{ currentPlayer, setCurrentPlayer }}>
-          <div className={currentPlayer === "Player" ? "active-board" : ""}>
-            <h3>Your Fleet</h3>
+          <div className="board-wrapper">
+            <div className={`board-label left ${currentPlayer === "Player" ? "active" : ""}`}>YOUR FLEET</div>
             <Board
               player={phase === "playing" ? "Player" : "None"}
               boardInstance={player.gameboard}
               handleAllSunk={handleGameOver}
             />
           </div>
-          <div className={currentPlayer === "Computer" ? "active-board" : ""}>
-            <h3>Enemy Fleet</h3>
+          <div className="board-wrapper">
+            <div className={`board-label right ${currentPlayer === "Computer" ? "active" : ""}`}>ENEMY WATERS</div>
             <Board
               player={phase === "playing" ? "Computer" : "None"}
               boardInstance={computer.gameboard}
