@@ -7,7 +7,6 @@ export class Computer extends Player {
   private knowledgeBoard: ("unknown" | "miss" | "hit")[][];
 
   constructor(
-    // private prevHits: Position[] = [],
     private availableHits: Position[] = [],
     private remainingShips: ShipModel[] = [...SHIPS]
   ) {
@@ -22,7 +21,7 @@ export class Computer extends Player {
     );
   }
 
-  private createProbabilityBoard() {
+  private createHeatmap() {
     return Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
       Array.from({ length: DEFAULT_BOARD_SIZE }, () => 0)
     );
@@ -71,6 +70,33 @@ export class Computer extends Player {
     }
   }
 
+  // Attempt to find a valid board combination with each of the remaining ships
+  private runSingleSimulation(): SimulationBoard | null {
+    const simulationBoard = this.createSimulationBoard();
+
+    for (const ship of this.remainingShips) {
+      let placed = false;
+
+      for (let attempts = 0; attempts < 50; attempts++) {
+        const orientation = ["horizontal", "vertical"][Math.floor(Math.random() * 2)] as Orientation;
+        const position: Position = {
+          x: Math.floor(Math.random() * DEFAULT_BOARD_SIZE),
+          y: Math.floor(Math.random() * DEFAULT_BOARD_SIZE),
+        };
+
+        if (this.canPlaceShip(simulationBoard, ship, position, orientation)) {
+          this.placeShip(simulationBoard, ship, position, orientation);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) return null; // In case of infinite loop, return null if attempts > 50
+    }
+
+    return simulationBoard;
+  }
+
   registerOutcome(position: Position, outcome: Outcome) {
     if (outcome === Outcome.HIT) {
       this.knowledgeBoard[position.y][position.x] = "hit";
@@ -78,30 +104,6 @@ export class Computer extends Player {
       this.knowledgeBoard[position.y][position.x] = "miss";
     }
   }
-
-  // Random attack choosing for now (TODO: implement smarter algorithm)
-  // chooseAttackRandom(): Position {
-  //   if (this.prevHits.length >= DEFAULT_BOARD_SIZE ** 2) {
-  //     throw new Error("All positions exhausted");
-  //   }
-
-  //   let cellPosition: Position;
-
-  //   do {
-  //     cellPosition = {
-  //       x: Math.floor(Math.random() * DEFAULT_BOARD_SIZE),
-  //       y: Math.floor(Math.random() * DEFAULT_BOARD_SIZE),
-  //     };
-  //   } while (
-  //     this.prevHits.some(
-  //       (position) =>
-  //         position.x === cellPosition.x && position.y === cellPosition.y
-  //     )
-  //   );
-
-  //   this.prevHits.push(cellPosition);
-  //   return cellPosition;
-  // }
 
   chooseAttackRandom(): Position {
     if (this.availableHits.length <= 0) {
