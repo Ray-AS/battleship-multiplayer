@@ -67,7 +67,7 @@ function App() {
     if (phase === "playing" && currentPlayer === "Computer") {
       // Short delay for computer attacks to make ui updates and gameplay feel smoother
       const timer = setTimeout(() => {
-        const cellToAttack = computer.chooseAttackRandom();
+        const cellToAttack = computer.chooseAttack();
         console.log(
           `Computer attacking (${cellToAttack.x}, ${cellToAttack.y})`
         );

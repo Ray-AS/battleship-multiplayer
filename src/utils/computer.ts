@@ -97,6 +97,29 @@ export class Computer extends Player {
     return simulationBoard;
   }
 
+  private generateHeatmap(simulationCount = 300): number[][] {
+    const heatmap = this.createHeatmap();
+
+    for (let i = 0; i < simulationCount; i++) {
+      const simulation = this.runSingleSimulation();
+      if (!simulation) continue;
+      
+      // Increment heatmap if simulation said ship can be found there and the position has not already been shot at
+      for (let y = 0; y < DEFAULT_BOARD_SIZE; y++) {
+        for (let x = 0; x < DEFAULT_BOARD_SIZE; x++) {
+          if (
+            simulation[y][x] &&
+            this.knowledgeBoard[y][x] === "unknown"
+          ) {
+            heatmap[y][x]++;
+          }
+        }
+      }
+    }
+
+    return heatmap;
+  }
+
   registerOutcome(position: Position, outcome: Outcome) {
     if (outcome === Outcome.HIT) {
       this.knowledgeBoard[position.y][position.x] = "hit";
@@ -118,5 +141,29 @@ export class Computer extends Player {
     return cellPosition;
   }
 
-  chooseAttack() {}
+  chooseAttack(): Position {
+    const heatmap = this.generateHeatmap();
+
+    let best: Position | null = null;
+    let bestScore = -1;
+
+    // Iterate across heatmap to find which position showed most likelihood of ship being located there
+    for (let y = 0; y < DEFAULT_BOARD_SIZE; y++) {
+      for (let x = 0; x < DEFAULT_BOARD_SIZE; x++) {
+        if (
+          this.knowledgeBoard[y][x] === "unknown" &&
+          heatmap[y][x] > bestScore
+        ) {
+          bestScore = heatmap[y][x];
+          best = { x, y };
+        }
+      }
+    }
+
+    if (!best) {
+      throw new Error("No valid attack found");
+    }
+
+    return best;
+  }
 }
