@@ -1,20 +1,81 @@
 import { DEFAULT_BOARD_SIZE } from "../configs";
-import type { Position } from "../models";
+import { Outcome, type Orientation, type Position, type ShipModel, type SimulationBoard } from "../models";
 import { Player, SHIPS } from "./player";
 
 export class Computer extends Player {
   // Keep track of previously hit positions to ensure no repetition
+  private knowledgeBoard: ("unknown" | "miss" | "hit")[][];
 
   constructor(
     // private prevHits: Position[] = [],
     private availableHits: Position[] = [],
-    private shipsToSink = SHIPS.map((s) => s.ship)
+    private remainingShips: ShipModel[] = [...SHIPS]
   ) {
     super();
     for (let y = 0; y < DEFAULT_BOARD_SIZE; y++) {
       for (let x = 0; x < DEFAULT_BOARD_SIZE; x++) {
         this.availableHits.push({ x, y });
       }
+    }
+    this.knowledgeBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
+      Array.from({ length: DEFAULT_BOARD_SIZE }, () => "unknown")
+    );
+  }
+
+  private createProbabilityBoard() {
+    return Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
+      Array.from({ length: DEFAULT_BOARD_SIZE }, () => 0)
+    );
+  }
+
+  private createSimulationBoard(): SimulationBoard {
+    return Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
+      Array.from({ length: DEFAULT_BOARD_SIZE }, () => false)
+    );
+  }
+
+  // Check validity of placements using only knowledge of the AI
+  private canPlaceShip(
+    simulationBoard: SimulationBoard,
+    ship: ShipModel,
+    position: Position,
+    orientation: Orientation
+  ): boolean {
+    for (let i = 0; i < ship.length; i++) {
+      const x = orientation === "horizontal" ? position.x + i : position.x;
+      const y = orientation === "vertical" ? position.y + i : position.y;
+
+      if (
+        x < 0 ||
+        y < 0 ||
+        x >= DEFAULT_BOARD_SIZE ||
+        y >= DEFAULT_BOARD_SIZE
+      ) return false;
+
+      if (this.knowledgeBoard[y][x] === "miss") return false;
+      if (simulationBoard[y][x]) return false;
+    }
+    return true;
+  }
+
+  private placeShip(
+    simBoard: SimulationBoard,
+    ship: ShipModel,
+    pos: Position,
+    orientation: Orientation
+  ) {
+    for (let i = 0; i < ship.length; i++) {
+      const x = orientation === "horizontal" ? pos.x + i : pos.x;
+      const y = orientation === "vertical" ? pos.y + i : pos.y;
+      simBoard[y][x] = true;
+    }
+  }
+
+  registerOutcome(position: Position, outcome: Outcome) {
+    if (outcome === Outcome.HIT) {
+      this.knowledgeBoard[position.y][position.x] = "hit";
+    } else if (outcome === Outcome.MISS) {
+      this.knowledgeBoard[position.y][position.x] = "miss";
     }
   }
 

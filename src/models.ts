@@ -40,3 +40,5 @@ export interface ShipModel {
   ship: ShipName
   length: ShipLength
 }
+
+export type SimulationBoard = boolean[][];

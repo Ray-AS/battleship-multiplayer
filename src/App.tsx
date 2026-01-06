@@ -71,7 +71,8 @@ function App() {
         console.log(
           `Computer attacking (${cellToAttack.x}, ${cellToAttack.y})`
         );
-        player.gameboard.receiveAttack(cellToAttack);
+        const outcome = player.gameboard.receiveAttack(cellToAttack);
+        computer.registerOutcome(cellToAttack, outcome);
 
         setRefreshTrigger((prev) => prev + 1);
 
