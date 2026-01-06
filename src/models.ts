@@ -1,3 +1,4 @@
+import { SHIPS } from "./utils/player";
 import type { Ship } from "./utils/ship";
 
 export interface Position {
@@ -32,7 +33,10 @@ export type BoardFunction = (
 
 export type GamePhase = "setup" | "playing" | "ended";
 
+type ShipName = typeof SHIPS[number]["ship"]
+type ShipLength = typeof SHIPS[number]["length"]
+
 export interface ShipModel {
-  ship: "carrier" | "battleship" | "cruiser" | "submarine" | "destroyer"
-  length: 5 | 4 | 3 | 2
+  ship: ShipName
+  length: ShipLength
 }

@@ -1,13 +1,13 @@
 import type { Orientation, ShipModel } from "../models";
 import { Gameboard } from "./gameboard";
 
-export const SHIPS: ShipModel[] = [
+export const SHIPS = [
   {ship: "carrier", length: 5},
   {ship: "battleship", length: 4},
   {ship: "cruiser", length: 3},
   {ship: "submarine", length: 3},
   {ship: "destroyer", length: 2},
-]
+] as const;
 
 export class Player {
   public gameboard: Gameboard;
@@ -19,7 +19,7 @@ export class Player {
   populate() {
     for (let i = 0; i < SHIPS.length; i++) {
       const result = this.gameboard.placeShip(
-        SHIPS[i],
+        SHIPS[i] as ShipModel,
         { x: i, y: 0 },
         "vertical"
       );
@@ -51,7 +51,7 @@ export class Player {
       } while (!isValid);
 
       const result = this.gameboard.placeShip(
-        SHIPS[i],
+        SHIPS[i] as ShipModel,
         { x, y },
         orientation
       );
