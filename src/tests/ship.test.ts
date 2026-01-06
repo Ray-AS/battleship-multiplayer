@@ -9,24 +9,24 @@ describe("Ship class", () => {
   }
 
   test("should create a Ship instance", () => {
-    const ship = new Ship(5);
+    const ship = new Ship({ ship: "destroyer", length: 2});
     expect(ship).toBeDefined();
   });
 
   test("should increment number of hits", () => {
-    const ship = new Ship(3);
+    const ship = new Ship({ ship: "destroyer", length: 2});
     hitShip(ship, 1);
     expect(ship.hits).toBe(1);
   });
 
   test("shouldn't sink when not enough hits", () => {
-    const ship = new Ship(2);
+    const ship = new Ship({ ship: "destroyer", length: 2});
     hitShip(ship, 1);
     expect(ship.isSunk()).toBe(false);
   });
 
   test("should sink after enough hits", () => {
-    const ship = new Ship(2);
+    const ship = new Ship({ ship: "destroyer", length: 2});
     hitShip(ship, 2);
     expect(ship.isSunk()).toBe(true);
   });

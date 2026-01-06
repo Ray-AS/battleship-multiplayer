@@ -1,9 +1,11 @@
+import type { ShipModel } from "../models";
+
 export class Ship {
   private _hits = 0
-  constructor(private readonly _length: number) {}
+  constructor(readonly specs: ShipModel) {}
 
   get length(): number {
-    return this._length;
+    return this.specs.length;
   }
 
   get hits() {
@@ -15,6 +17,6 @@ export class Ship {
   }
 
   isSunk(): boolean {
-    return this._hits >= this._length;
+    return this._hits >= this.specs.length;
   }
 }

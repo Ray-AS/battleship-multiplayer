@@ -31,3 +31,8 @@ export type BoardFunction = (
 ) => boolean;
 
 export type GamePhase = "setup" | "playing" | "ended";
+
+export interface ShipModel {
+  ship: "carrier" | "battleship" | "cruiser" | "submarine" | "destroyer"
+  length: 5 | 4 | 3 | 2
+}

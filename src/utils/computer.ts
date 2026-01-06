@@ -9,7 +9,7 @@ export class Computer extends Player {
   }
 
   // Random attack choosing for now (TODO: implement smarter algorithm)
-  chooseAttack(): Position {
+  chooseAttackRandom(): Position {
     if (this.prevHit.length >= DEFAULT_BOARD_SIZE**2) {
       throw new Error("All positions exhausted");
     }

@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { Outcome, type Position, type Orientation } from "../models";
+import { Outcome, type Position, type Orientation, type ShipModel } from "../models";
 import { Gameboard } from "../utils/gameboard";
 
 describe("Gameboard class", () => {
@@ -26,33 +26,33 @@ describe("Gameboard class", () => {
     `should place ship on board %sly`,
     (orientation) => {
       const gameboard = new Gameboard();
-      const testLength = 3;
+      const testModel: ShipModel = { ship: "cruiser", length: 5};
       const testPosition: Position = { x: 1, y: 1 };
       const testOrientation: Orientation = orientation;
       const result = gameboard.placeShip(
-        testLength,
+        testModel,
         testPosition,
         testOrientation
       );
 
       expect(result).toBe(true);
       expect(
-        checkBoardValues(gameboard, testPosition, testLength, testOrientation)
+        checkBoardValues(gameboard, testPosition, testModel.length, testOrientation)
       ).toBe(true);
     }
   );
 
   test("should not place ship out-of-bounds on board", () => {
     const gameboard = new Gameboard();
-    const result = gameboard.placeShip(3, { x: 9, y: 9 }, "vertical");
+    const result = gameboard.placeShip({ ship: "cruiser", length: 5}, { x: 9, y: 9 }, "vertical");
 
     expect(result).toBe(false);
   });
 
   test("should not place ship on already occupied space", () => {
     const gameboard = new Gameboard();
-    gameboard.placeShip(3, { x: 1, y: 1 }, "vertical");
-    const result = gameboard.placeShip(3, { x: 1, y: 1 }, "vertical");
+    gameboard.placeShip({ ship: "cruiser", length: 5}, { x: 1, y: 1 }, "vertical");
+    const result = gameboard.placeShip({ ship: "cruiser", length: 5}, { x: 1, y: 1 }, "vertical");
 
     expect(result).toBe(false);
   });
@@ -60,7 +60,7 @@ describe("Gameboard class", () => {
   test("should hit ship", () => {
     const gameboard = new Gameboard();
     const testPosition: Position = { x: 1, y: 1 };
-    gameboard.placeShip(3, testPosition, "vertical");
+    gameboard.placeShip({ ship: "cruiser", length: 5}, testPosition, "vertical");
     const result = gameboard.receiveAttack(testPosition);
 
     expect(result).toBe(Outcome.HIT);
@@ -92,7 +92,7 @@ describe("Gameboard class", () => {
   test("should not report all ships sunk", () => {
     const gameboard = new Gameboard();
     const testPosition: Position = { x: 1, y: 1 };
-    gameboard.placeShip(1, testPosition, "vertical");
+    gameboard.placeShip({ ship: "destroyer", length: 2}, testPosition, "vertical");
 
     expect(gameboard.allShipsSunk()).toBe(false);
   });
@@ -100,18 +100,20 @@ describe("Gameboard class", () => {
   test("should report all ships sunk (one ship)", () => {
     const gameboard = new Gameboard();
     const testPosition: Position = { x: 1, y: 1 };
-    gameboard.placeShip(1, testPosition, "vertical");
+    gameboard.placeShip({ ship: "destroyer", length: 2}, testPosition, "vertical");
     gameboard.receiveAttack(testPosition);
+    gameboard.receiveAttack({ x: testPosition.x, y: testPosition.y + 1 });
 
     expect(gameboard.allShipsSunk()).toBe(true);
   });
 
   test("should report all ships sunk (multiple ships)", () => {
     const gameboard = new Gameboard();
-    gameboard.placeShip(1, { x: 1, y: 1 }, "vertical");
-    gameboard.placeShip(2, { x: 2, y: 2 }, "horizontal");
+    gameboard.placeShip({ ship: "destroyer", length: 2}, { x: 1, y: 1 }, "vertical");
+    gameboard.placeShip({ ship: "destroyer", length: 2}, { x: 2, y: 2 }, "horizontal");
 
     gameboard.receiveAttack({ x: 1, y: 1 });
+    gameboard.receiveAttack({ x: 1, y: 2 });
     expect(gameboard.allShipsSunk()).toBe(false);
 
     gameboard.receiveAttack({ x: 2, y: 2 });

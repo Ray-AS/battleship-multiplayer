@@ -1,7 +1,13 @@
-import type { Orientation } from "../models";
+import type { Orientation, ShipModel } from "../models";
 import { Gameboard } from "./gameboard";
 
-const SHIP_LENGTHS = [5, 4, 3, 3, 2];
+export const SHIPS: ShipModel[] = [
+  {ship: "carrier", length: 5},
+  {ship: "battleship", length: 4},
+  {ship: "cruiser", length: 3},
+  {ship: "submarine", length: 3},
+  {ship: "destroyer", length: 2},
+]
 
 export class Player {
   public gameboard: Gameboard;
@@ -11,9 +17,9 @@ export class Player {
 
   // Just pre-populate ships for now (TODO: add placement functionality)
   populate() {
-    for (let i = 0; i < SHIP_LENGTHS.length; i++) {
+    for (let i = 0; i < SHIPS.length; i++) {
       const result = this.gameboard.placeShip(
-        SHIP_LENGTHS[i],
+        SHIPS[i],
         { x: i, y: 0 },
         "vertical"
       );
@@ -22,7 +28,7 @@ export class Player {
   }
 
   randomPopulate() {
-    for (let i = 0; i < SHIP_LENGTHS.length; i++) {
+    for (let i = 0; i < SHIPS.length; i++) {
       let isValid: boolean;
       let x, y, orientation: Orientation;
 
@@ -34,18 +40,18 @@ export class Player {
 
         orientation = ["horizontal", "vertical"][Math.floor(Math.random() * 2)] as Orientation;
 
-        if (this.gameboard.isOutOfBounds(SHIP_LENGTHS[i], {x, y}, orientation)) {
+        if (this.gameboard.isOutOfBounds(SHIPS[i].length, {x, y}, orientation)) {
           isValid = false;
           continue;
         }
 
-        if(this.gameboard.isOccupied(SHIP_LENGTHS[i], {x, y}, orientation)) {
+        if(this.gameboard.isOccupied(SHIPS[i].length, {x, y}, orientation)) {
           isValid = false;
         }
       } while (!isValid);
 
       const result = this.gameboard.placeShip(
-        SHIP_LENGTHS[i],
+        SHIPS[i],
         { x, y },
         orientation
       );

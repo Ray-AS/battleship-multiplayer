@@ -1,5 +1,5 @@
 import { DEFAULT_BOARD_SIZE } from "../configs";
-import { Outcome, type Board, type BoardFunction, type Position } from "../models";
+import { Outcome, type Board, type BoardFunction, type Orientation, type Position, type ShipModel } from "../models";
 import { Ship } from "./ship";
 
 export class Gameboard {
@@ -39,11 +39,11 @@ export class Gameboard {
     return false;
   }
 
-  placeShip: BoardFunction = (length, position, orientation) => {
-    if (this.isOutOfBounds(length, position, orientation)) return false;
-    if (this.isOccupied(length, position, orientation)) return false;
+  placeShip = (shipToPlace: ShipModel, position: Position, orientation: Orientation) => {
+    if (this.isOutOfBounds(shipToPlace.length, position, orientation)) return false;
+    if (this.isOccupied(shipToPlace.length, position, orientation)) return false;
 
-    const ship = new Ship(length);
+    const ship = new Ship(shipToPlace);
     this._ships.push(ship);
 
     for (let i = 0; i < ship.length; i++) {
