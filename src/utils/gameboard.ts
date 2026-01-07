@@ -73,10 +73,18 @@ export class Gameboard {
 
     if (cell.type === "ship") {
       cell.type = "hit";
-      cell.value!.hit();
+
+      const ship = cell.value;
+      
+      if (!ship) throw new Error("Ship not found where expected.")
+      
+      ship.hit();
       return {
         outcome: Outcome.HIT,
-        ship: cell.value!
+        shipInfo: {
+          model: cell.value!.specs.model,
+          isSunk: ship.isSunk()
+        }
       };
     } else if (cell.type === "empty") {
       cell.type = "miss";

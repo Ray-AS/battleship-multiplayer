@@ -131,13 +131,13 @@ export class Computer extends Player {
     return heatmap;
   }
 
-  registerOutcome(position: Position, { outcome, ship }: AttackOutcome) {
+  registerOutcome(position: Position, { outcome, shipInfo }: AttackOutcome) {
     if (outcome === Outcome.HIT) {
       this.knowledgeBoard[position.y][position.x] = "hit";
 
-      if (ship) {
+      if (shipInfo && shipInfo.isSunk) {
         this.remainingShips = this.remainingShips.filter(
-          (s) => s.model !== ship.specs.model
+          (s) => s.model !== shipInfo.model
         );
       }
     } else if (outcome === Outcome.MISS) {

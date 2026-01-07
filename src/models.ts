@@ -25,7 +25,10 @@ export enum Outcome {
 
 export interface AttackOutcome {
   outcome: Outcome
-  ship?: Ship
+  shipInfo?: {
+    model: ShipName
+    isSunk: boolean
+  }
 }
 
 export type PlayerType = "Player" | "Computer" | "None";

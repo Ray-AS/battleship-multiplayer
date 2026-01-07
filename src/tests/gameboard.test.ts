@@ -1,7 +1,6 @@
 import { expect, test, describe } from "vitest";
 import { Outcome, type Position, type Orientation, type ShipModel } from "../models";
 import { Gameboard } from "../utils/gameboard";
-import { Ship } from "../utils/ship";
 
 describe("Gameboard class", () => {
   function checkBoardValues(
@@ -65,7 +64,6 @@ describe("Gameboard class", () => {
     const result = gameboard.receiveAttack(testPosition);
 
     expect(result.outcome).toBe(Outcome.HIT);
-    expect(result.ship instanceof Ship).toBe(true);
     expect(gameboard.board[1][1].type).toBe("hit");
   });
 
