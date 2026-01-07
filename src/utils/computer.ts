@@ -12,20 +12,15 @@ import { Player, SHIPS } from "./player";
 export class Computer extends Player {
   // Keep track of previously hit positions to ensure no repetition
   private knowledgeBoard: ("unknown" | "miss" | "hit")[][];
+  private remainingShips: ShipModel[];
+  private availableHits: Position[];
 
-  constructor(
-    private availableHits: Position[] = [],
-    private remainingShips: ShipModel[] = [...SHIPS]
-  ) {
+  constructor() {
     super();
-    for (let y = 0; y < DEFAULT_BOARD_SIZE; y++) {
-      for (let x = 0; x < DEFAULT_BOARD_SIZE; x++) {
-        this.availableHits.push({ x, y });
-      }
-    }
-    this.knowledgeBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
-      Array.from({ length: DEFAULT_BOARD_SIZE }, () => "unknown")
-    );
+    this.knowledgeBoard = [];
+    this.availableHits = [];
+    this.remainingShips = [];
+    this.resetAI();
   }
 
   private createHeatmap() {
@@ -177,10 +172,37 @@ export class Computer extends Player {
       }
     }
 
+    if (bestScore === 0) {
+      best = this.chooseAttackRandom();
+    }
+
     if (!best) {
       throw new Error("No valid attack found");
     }
 
+    const bestIndex = this.availableHits.findIndex(
+      (p) => p.x === best.x && p.y === best.y
+    );
+    if (bestIndex !== -1) {
+      this.availableHits.splice(bestIndex, 1);
+    }
+
     return best;
+  }
+
+  resetAI() {
+    this.knowledgeBoard = this.knowledgeBoard = Array.from(
+      { length: DEFAULT_BOARD_SIZE },
+      () => Array.from({ length: DEFAULT_BOARD_SIZE }, () => "unknown")
+    );
+
+    this.availableHits = [];
+    for (let y = 0; y < DEFAULT_BOARD_SIZE; y++) {
+      for (let x = 0; x < DEFAULT_BOARD_SIZE; x++) {
+        this.availableHits.push({ x, y });
+      }
+    }
+
+    this.remainingShips = [...SHIPS];
   }
 }

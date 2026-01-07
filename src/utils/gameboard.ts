@@ -79,6 +79,8 @@ export class Gameboard {
       if (!ship) throw new Error("Ship not found where expected.")
       
       ship.hit();
+      if (ship.isSunk()) console.log(`${ship.specs.model} is sunk!`);
+
       return {
         outcome: Outcome.HIT,
         shipInfo: {

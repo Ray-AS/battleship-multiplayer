@@ -22,6 +22,7 @@ function App() {
 
     computer.gameboard.clear();
     computer.randomPopulate();
+    computer.resetAI();
 
     // Ensure board is populated if player did not populate
     if (player.gameboard.allShipsSunk()) {
