@@ -5,7 +5,11 @@ interface cellProps {
   position: Position;
   disabled: boolean;
   hide: boolean;
+  preview: boolean;
+  previewInvalid: boolean;
   interact: (position: Position) => void;
+  mouseEnter: () => void;
+  mouseLeave: () => void;
 }
 
 export default function Cell({
@@ -13,7 +17,11 @@ export default function Cell({
   position,
   disabled,
   hide,
+  preview,
+  previewInvalid,
   interact,
+  mouseEnter,
+  mouseLeave,
 }: cellProps) {
   let value: string;
   let style: string = state;
@@ -41,10 +49,18 @@ export default function Cell({
       break;
   }
 
+  const previewClass = previewInvalid
+    ? "preview-invalid"
+    : preview
+    ? "preview-valid"
+    : "";
+
   return (
     <button
-      className={`cell ${style}`}
+      className={`cell ${style} ${previewClass}`}
       onClick={() => interact(position)}
+      onMouseEnter={mouseEnter}
+      onMouseLeave={mouseLeave}
       disabled={disabled}
     >
       {value}

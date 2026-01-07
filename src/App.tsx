@@ -48,8 +48,6 @@ function App() {
         setPlacement(null); // All ships placed!
       }
       setRefreshTrigger((prev) => prev + 1);
-    } else {
-      alert("Invalid placement! Ship overlaps or is out of bounds.");
     }
   }
 
@@ -156,10 +154,11 @@ function App() {
                     })
                   }
                 >
-                  {placement.orientation[0].toUpperCase() + placement.orientation.slice(1)}
+                  {placement.orientation[0].toUpperCase() +
+                    placement.orientation.slice(1)}
                 </button>
-                <button 
-                  onClick={() => { 
+                <button
+                  onClick={() => {
                     setPlacement(null);
                     player.gameboard.clear();
                   }}
@@ -215,6 +214,7 @@ function App() {
               boardInstance={player.gameboard}
               phase={phase}
               handleAllSunk={handleGameOver}
+              placement={placement}
               handlePlacement={placement ? handleCellClick : undefined}
             />
           </div>

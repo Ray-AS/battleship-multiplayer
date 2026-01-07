@@ -61,3 +61,21 @@ button {
 .cell.ship {
   background-color: rgb(36, 36, 36);
 }
+
+.cell.preview-valid {
+  background-color: rgba(0, 255, 0, 0.3);
+  border: 1px dashed green;
+}
+
+.cell.preview-valid:hover {
+  box-shadow: 0 0 8px 2px rgba(12, 158, 21, 0.6);
+}
+
+.cell.preview-invalid {
+  background-color: rgba(255, 0, 0, 0.3);
+  border: 1px dashed rgb(128, 0, 0);
+}
+
+.cell.preview-invalid:hover {
+  box-shadow: 0 0 8px 2px rgba(158, 12, 12, 0.6);
+}
