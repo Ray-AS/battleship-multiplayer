@@ -4,7 +4,7 @@ A fully interactive Battleship game built with React and TypeScript. Play agains
 
 ## Demo
 
-![Demo](src/assets/example.gif)
+![Demo](/assets/example-complete.gif)
 
 [Live Preview](https://battleship-eight-gray.vercel.app/)
 
