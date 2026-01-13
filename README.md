@@ -2,19 +2,13 @@
 
 A fully interactive Battleship game built with React and TypeScript. Play against a smart computer AI uses simulations to attack the player. Features include manual or random board population, turn-based gameplay, and game state management.
 
-## Demo
-
-![Demo](/assets/example-complete.gif)
-
-[Live Preview](https://battleship-eight-gray.vercel.app/)
-
 ## Features
 
-- <strong>Interactive Grid:</strong> Place ships manually or automatically populate your board
-- <strong>Hovering Preview:</strong> Hover over cells to preview ship placement and its validity
-- <strong>AI Opponent:</strong> Smart computer player with probabilistic attack strategy using heatmaps and simulation
-- <strong>Game Phases:</strong> Setup, playing, and end game states handled dynamically
-- <strong>Real-time Feedback:</strong> Visual cues for hits, misses, and sunk ships
+- **Interactive Grid:** Place ships manually or automatically populate your board
+- **Hovering Preview:** Hover over cells to preview ship placement and its validity
+- **AI Opponent:** Smart computer player with probabilistic attack strategy using heatmaps and simulation
+- **Game Phases:** Setup, playing, and end game states handled dynamically
+- **Real-time Feedback:** Visual cues for hits, misses, and sunk ships
 
 ## Tech Stack
 
@@ -33,7 +27,7 @@ A fully interactive Battleship game built with React and TypeScript. Play agains
 ### Installation & Launching
 
 ```bash
-git clone git@github.com:Ray-AS/battleship.git
+git clone git@github.com:Ray-AS/battleship-multiplayer.git
 cd battleship
 npm install
 npm run dev
@@ -49,7 +43,7 @@ npm run test
 
 ## Gameplay
 
-1. <strong>Setup</strong>
+1. **Setup**
 
    - Click Manual to place ships one by one
    - Hover over the grid to preview placement
@@ -57,21 +51,21 @@ npm run test
    - Click Randomize to automatically place all ships
    - Click Start to begin the game
 
-2. <strong>Playing</strong>
+2. **Playing**
 
    - Click on the enemy grid to attack
    - Wait for the AI to take its turn after yours
 
-3. <strong>End</strong>
+3. **End**
    - A winner is announced
    - Click Restart to play again
 
 ## AI Strategy
 
-- <strong>Tracks Board State:</strong> Keeps track of hits, misses, and sunk ships to avoid attacking the same positions twice
-- <strong>Heatmap Simulations:</strong> Runs multiple simulations of all possible placements for remaining ships, generating a probability map to identify the most likely positions for ships.
-- <strong>Adaptive Targeting:</strong> Focuses attacks around known hits to efficiently sink ships and updates its strategy dynamically as ships are sunk
-- <strong>Randomized Fallback:</strong> If no high-probability targets are available, it selects from remaining unknown cells, adding unpredictability and making gameplay feel natural
+- **Tracks Board State:** Keeps track of hits, misses, and sunk ships to avoid attacking the same positions twice
+- **Heatmap Simulations:** Runs multiple simulations of all possible placements for remaining ships, generating a probability map to identify the most likely positions for ships.
+- **Adaptive Targeting:** Focuses attacks around known hits to efficiently sink ships and updates its strategy dynamically as ships are sunk
+- **Randomized Fallback:** If no high-probability targets are available, it selects from remaining unknown cells, adding unpredictability and making gameplay feel natural
 
 ## Test-Driven Development
 
