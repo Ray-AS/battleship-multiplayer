@@ -1,11 +1,11 @@
 import { expect, test, describe } from "vitest";
-import { Gameboard } from "../utils/gameboard";
+import { Gameboard } from "../utils/gameboard.ts";
 import {
   Outcome,
   type Position,
   type Orientation,
   type ShipModel,
-} from "../models";
+} from "../models.ts";
 
 describe("Gameboard class", () => {
   function checkShipOnBoard(

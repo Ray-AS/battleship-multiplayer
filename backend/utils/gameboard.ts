@@ -1,14 +1,14 @@
 import { DEFAULT_BOARD_SIZE } from "../configs.ts";
-import type {
-  Cell,
+import {
+  type Cell,
   Outcome,
-  AttackOutcome,
-  Board,
-  Orientation,
-  Position,
-  ShipModel,
+  type AttackOutcome,
+  type Board,
+  type Orientation,
+  type Position,
+  type ShipModel,
 } from "../models.ts";
-import type { Ship } from "./ship.ts";
+import { Ship } from "./ship.ts";
 
 export class Gameboard {
   private _board: Board;
@@ -119,18 +119,24 @@ export class Gameboard {
     // Hit
     const ship = cell.ship;
     ship.hit();
-
     this._board[position.y][position.x] = { type: "hit", ship };
 
     const isSunk = ship.isSunk();
 
+    // Only include positions if the ship is sunk
+    const shipInfo: {
+      model: typeof ship.specs.model;
+      isSunk: boolean;
+      positions?: Position[];
+    } = {
+      model: ship.specs.model,
+      isSunk,
+      ...(isSunk && { positions: [...ship.positions] }),
+    };
+
     return {
       outcome: Outcome.HIT,
-      shipInfo: {
-        model: ship.specs.model,
-        isSunk,
-        positions: isSunk ? [...ship.positions] : undefined,
-      },
+      shipInfo,
     };
   }
 
