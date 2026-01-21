@@ -2,14 +2,6 @@ import { SHIPS } from "../configs.ts";
 import type { Orientation, ShipModel } from "../models.ts";
 import { Gameboard } from "./gameboard.ts";
 
-// export const SHIPS = [
-//   { model: "carrier", length: 5 },
-//   { model: "battleship", length: 4 },
-//   { model: "cruiser", length: 3 },
-//   { model: "submarine", length: 3 },
-//   { model: "destroyer", length: 2 },
-// ] as const;
-
 export class Player {
   public gameboard: Gameboard;
   constructor() {
