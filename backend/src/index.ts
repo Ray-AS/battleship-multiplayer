@@ -1,11 +1,19 @@
 import Fastify from "fastify";
 import swaggerPlugin from "./plugins/swagger.ts";
+import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs.ts";
 
 const fastify = Fastify({ logger: true });
 await fastify.register(swaggerPlugin);
 
 fastify.get("/", async () => {
-  return { message: "Battleship backend running!" };
+  return {
+    "name": "Battleship API",
+    "status": "online",
+    "config": {
+      "boardSize": DEFAULT_BOARD_SIZE,
+      "ships": SHIPS
+    }
+  }
 });
 
 fastify.post("/game/:id/start", async (request, reply) => {
