@@ -1,6 +1,6 @@
-import { SHIPS } from "../configs";
-import type { Orientation, ShipModel } from "../models";
-import { Gameboard } from "./gameboard";
+import { SHIPS } from "../configs.ts";
+import type { Orientation, ShipModel } from "../models.ts";
+import { Gameboard } from "./gameboard.ts";
 
 // export const SHIPS = [
 //   { model: "carrier", length: 5 },
@@ -22,7 +22,7 @@ export class Player {
       const result = this.gameboard.placeShip(
         SHIPS[i] as ShipModel,
         { x: i, y: 0 },
-        "vertical"
+        "vertical",
       );
       if (!result) throw new Error("Failed to place all ships.");
     }
@@ -59,7 +59,7 @@ export class Player {
       const result = this.gameboard.placeShip(
         SHIPS[i] as ShipModel,
         { x, y },
-        orientation
+        orientation,
       );
       if (!result) throw new Error("Failed to place all ships.");
     }

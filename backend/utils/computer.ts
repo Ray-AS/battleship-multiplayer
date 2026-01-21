@@ -1,4 +1,4 @@
-import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs";
+import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs.ts";
 import {
   Outcome,
   type AttackOutcome,
@@ -6,8 +6,8 @@ import {
   type Position,
   type ShipModel,
   type SimulationBoard,
-} from "../models";
-import { Player } from "./player";
+} from "../models.ts";
+import { Player } from "./player.ts";
 
 export class Computer extends Player {
   // Keep track of known board state, valid positions and ships left so AI can make an informed decision
@@ -28,7 +28,7 @@ export class Computer extends Player {
     simulationBoard: SimulationBoard,
     ship: ShipModel,
     position: Position,
-    orientation: Orientation
+    orientation: Orientation,
   ): boolean {
     for (let i = 0; i < ship.length; i++) {
       const x = orientation === "horizontal" ? position.x + i : position.x;
@@ -47,7 +47,7 @@ export class Computer extends Player {
     simBoard: SimulationBoard,
     ship: ShipModel,
     pos: Position,
-    orientation: Orientation
+    orientation: Orientation,
   ) {
     for (let i = 0; i < ship.length; i++) {
       const x = orientation === "horizontal" ? pos.x + i : pos.x;
@@ -78,7 +78,7 @@ export class Computer extends Player {
 
           // Remove sunk ship from remaining ships
           this.remainingShips = this.remainingShips.filter(
-            (s) => s.model !== shipInfo.model
+            (s) => s.model !== shipInfo.model,
           );
         }
         return;
@@ -88,7 +88,7 @@ export class Computer extends Player {
   // 2-D array to simulate valid ship positions using current AI knowledge
   private createSimulationBoard(): SimulationBoard {
     return Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
-      Array.from({ length: DEFAULT_BOARD_SIZE }, () => false)
+      Array.from({ length: DEFAULT_BOARD_SIZE }, () => false),
     );
   }
 
@@ -134,7 +134,7 @@ export class Computer extends Player {
   // 2-D array to count # of times ship appears at a given position
   private createHeatmap() {
     return Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
-      Array.from({ length: DEFAULT_BOARD_SIZE }, () => 0)
+      Array.from({ length: DEFAULT_BOARD_SIZE }, () => 0),
     );
   }
 
@@ -193,7 +193,7 @@ export class Computer extends Player {
 
     // Remove position from available hits
     const bestIndex = this.availableHits.findIndex(
-      (p) => p.x === best.x && p.y === best.y
+      (p) => p.x === best.x && p.y === best.y,
     );
     if (bestIndex !== -1) {
       this.availableHits.splice(bestIndex, 1);
@@ -216,9 +216,8 @@ export class Computer extends Player {
   }
 
   resetAI() {
-    this.knowledgeBoard = Array.from(
-      { length: DEFAULT_BOARD_SIZE },
-      () => Array.from({ length: DEFAULT_BOARD_SIZE }, () => "unknown")
+    this.knowledgeBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
+      Array.from({ length: DEFAULT_BOARD_SIZE }, () => "unknown"),
     );
 
     this.availableHits = [];

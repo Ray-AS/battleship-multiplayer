@@ -1,4 +1,4 @@
-import type { Position, ShipModel } from "../models";
+import type { Position, ShipModel } from "../models.ts";
 
 export class Ship {
   private _hits = 0;

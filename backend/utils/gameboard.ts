@@ -1,14 +1,14 @@
-import { DEFAULT_BOARD_SIZE } from "../configs";
-import {
+import { DEFAULT_BOARD_SIZE } from "../configs.ts";
+import type {
   Cell,
   Outcome,
-  type AttackOutcome,
-  type Board,
-  type Orientation,
-  type Position,
-  type ShipModel,
-} from "../models";
-import { Ship } from "./ship";
+  AttackOutcome,
+  Board,
+  Orientation,
+  Position,
+  ShipModel,
+} from "../models.ts";
+import type { Ship } from "./ship.ts";
 
 export class Gameboard {
   private _board: Board;
