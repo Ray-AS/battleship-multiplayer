@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { Ship } from "../utils/ship.ts";
+import { Ship } from "../src/utils/ship.ts";
 
 describe("Ship class", () => {
   function hitShip(ship: Ship, times: number) {

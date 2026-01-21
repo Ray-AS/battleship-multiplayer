@@ -1,5 +1,5 @@
-import { SHIPS } from "../configs.ts";
-import type { Orientation, ShipModel } from "../models.ts";
+import { SHIPS } from "../../configs.ts";
+import type { Orientation, ShipModel } from "../../models.ts";
 import { Gameboard } from "./gameboard.ts";
 
 export class Player {

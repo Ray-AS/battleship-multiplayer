@@ -1,4 +1,4 @@
-import { DEFAULT_BOARD_SIZE } from "../configs.ts";
+import { DEFAULT_BOARD_SIZE } from "../../configs.ts";
 import {
   type Cell,
   Outcome,
@@ -7,7 +7,7 @@ import {
   type Orientation,
   type Position,
   type ShipModel,
-} from "../models.ts";
+} from "../../models.ts";
 import { Ship } from "./ship.ts";
 
 export class Gameboard {

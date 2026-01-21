@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { Gameboard } from "../utils/gameboard.ts";
+import { Gameboard } from "../src/utils/gameboard.ts";
 import {
   Outcome,
   type Position,
