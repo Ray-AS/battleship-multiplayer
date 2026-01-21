@@ -4,6 +4,7 @@ import { Gameboard } from "./gameboard.ts";
 
 export class Player {
   public gameboard: Gameboard;
+
   constructor() {
     this.gameboard = new Gameboard();
   }

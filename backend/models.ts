@@ -18,23 +18,25 @@ export type Board = Cell[][];
 
 // export type cellState = "ship" | "empty" | "miss" | "hit";
 
-export enum Outcome {
-  MISS,
-  HIT,
-  UNAVAILABLE,
-}
+export const Outcome = {
+  MISS: "miss",
+  HIT: "hit",
+  UNAVAILABLE: "unavailable",
+} as const;
+
+export type Outcome = (typeof Outcome)[keyof typeof Outcome];
 
 export type AttackOutcome =
-  | { outcome: Outcome.MISS }
+  | { outcome: typeof Outcome.MISS }
   | {
-      outcome: Outcome.HIT;
+      outcome: typeof Outcome.HIT;
       shipInfo: {
         model: ShipName;
         isSunk: boolean;
         positions?: Position[];
       };
     }
-  | { outcome: Outcome.UNAVAILABLE };
+  | { outcome: typeof Outcome.UNAVAILABLE };
 
 export type PlayerType = "Player" | "Computer" | "None";
 

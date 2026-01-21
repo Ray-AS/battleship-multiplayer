@@ -11,10 +11,12 @@ import {
 import { Ship } from "./ship.ts";
 
 export class Gameboard {
+  readonly boardSize: number;
   private _board: Board;
   private _ships: Ship[] = [];
 
-  constructor(readonly boardSize: number = DEFAULT_BOARD_SIZE) {
+  constructor(boardSize: number = DEFAULT_BOARD_SIZE) {
+    this.boardSize = boardSize;
     this._board = this.createEmptyBoard();
   }
 

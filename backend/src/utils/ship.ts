@@ -3,8 +3,11 @@ import type { Position, ShipModel } from "../../models.ts";
 export class Ship {
   private _hits = 0;
   readonly positions: Position[] = [];
+  readonly specs: ShipModel;
 
-  constructor(readonly specs: ShipModel) {}
+  constructor(specs: ShipModel) {
+    this.specs = specs;
+  }
 
   get length(): number {
     return this.specs.length;
