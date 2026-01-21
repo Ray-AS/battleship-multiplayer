@@ -16,7 +16,43 @@ export async function game(fastify: FastifyInstance) {
   });
 
   // Attack: Process player move and AI counter-move
-  fastify.post("/:id/attack", async (request, reply) => {
+  const attackBodySchema = {
+    type: 'object',
+    required: ['x', 'y'],
+    properties: {
+      x: { type: 'integer', minimum: 0 },
+      y: { type: 'integer', minimum: 0 }
+    }
+  };
+
+  // Add the schema to the route
+  fastify.post("/:id/attack", {
+    schema: {
+      body: attackBodySchema,
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            playerAttack: { type: 'object', additionalProperties: true },
+            aiAttack: { type: 'object', additionalProperties: true },
+            boards: { type: 'object', additionalProperties: true }
+          }
+        },
+        404: {
+          type: 'object',
+          properties: {
+            error: { type: 'string' }
+          }
+        }
+      }
+    }
+  }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const { x, y } = request.body as { x: number, y: number };
     const session = gameService.getSession(id);
