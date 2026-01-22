@@ -197,6 +197,10 @@ export async function attack(
       data: {
         playerAttack,
         aiAttack: null,
+        boards: {
+          player: human.gameboard.getSnapshot(),
+          opponent: gameService.getMaskedBoard(ai.gameboard),
+        },
         phase: session.phase,
         history: session.history,
       },
