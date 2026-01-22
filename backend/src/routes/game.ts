@@ -35,19 +35,19 @@ export async function game(fastify: FastifyInstance) {
   // Start Game: Initializes the session
   fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const humanPlayerId = "player";
+    const playerId = "player";
 
     try {
-      const session = gameService.createGame(id, humanPlayerId);
-      const humanParticipant = session.participants.get(humanPlayerId);
-      const aiParticipant = session.participants.get("computer");
+      const session = gameService.createGame(id, playerId);
+      const human = session.participants.get(playerId);
+      const ai = session.participants.get("computer");
 
       return {
         gameId: id,
         phase: session.phase,
-        playerBoard: humanParticipant?.gameboard.getSnapshot(),
-        opponentBoard: aiParticipant
-          ? gameService.getMaskedBoard(aiParticipant.gameboard)
+        playerBoard: human?.gameboard.getSnapshot(),
+        opponentBoard: ai
+          ? gameService.getMaskedBoard(ai.gameboard)
           : undefined,
       };
     } catch {
@@ -186,8 +186,12 @@ export async function game(fastify: FastifyInstance) {
         result,
         timestamp: Date.now(),
       });
-
-      session.turn = "player";
+      
+      if(human.gameboard.allShipsSunk()) {
+        session.phase = "ended";
+      } else{
+        session.turn = "player";
+      }
     }
 
     return {
@@ -280,15 +284,15 @@ export async function game(fastify: FastifyInstance) {
         return reply.status(400).send({ error: "It is not your turn" });
       }
 
-      const humanParticipant = session.participants.get("player");
-      const aiParticipant = session.participants.get("computer");
+      const human = session.participants.get("player");
+      const ai = session.participants.get("computer");
 
-      if (!humanParticipant || !aiParticipant) {
+      if (!human || !ai) {
         return reply.status(500).send({ error: "Participants not found" });
       }
 
       // Player attacks AI
-      const playerAttack = aiParticipant.gameboard.receiveAttack({ x, y });
+      const playerAttack = ai.gameboard.receiveAttack({ x, y });
 
       if (playerAttack.outcome === Outcome.UNAVAILABLE) {
         return reply.status(400).send({ error: "Invalid move" });
@@ -302,7 +306,7 @@ export async function game(fastify: FastifyInstance) {
       });
 
       // Check if AI has lost
-      if (aiParticipant.gameboard.allShipsSunk()) {
+      if (ai.gameboard.allShipsSunk()) {
         session.phase = "ended";
         return {
           playerAttack,
@@ -313,9 +317,9 @@ export async function game(fastify: FastifyInstance) {
       }
 
       // AI counterattacks if game not ended
-      const aiInstance = aiParticipant.instance as Computer;
+      const aiInstance = ai.instance as Computer;
       const aiCoords = aiInstance.chooseAttack();
-      const aiAttack = humanParticipant.gameboard.receiveAttack(aiCoords);
+      const aiAttack = human.gameboard.receiveAttack(aiCoords);
       aiInstance.registerOutcome(aiCoords, aiAttack);
 
       session.history.push({
@@ -325,7 +329,7 @@ export async function game(fastify: FastifyInstance) {
         timestamp: Date.now(),
       });
 
-      if (humanParticipant.gameboard.allShipsSunk()) {
+      if (human.gameboard.allShipsSunk()) {
         session.phase = "ended";
       } else {
         session.turn = "player";
@@ -335,8 +339,8 @@ export async function game(fastify: FastifyInstance) {
         playerAttack,
         aiAttack,
         boards: {
-          player: humanParticipant.gameboard.getSnapshot(),
-          opponent: gameService.getMaskedBoard(aiParticipant.gameboard),
+          player: human.gameboard.getSnapshot(),
+          opponent: gameService.getMaskedBoard(ai.gameboard),
         },
         phase: session.phase,
       };

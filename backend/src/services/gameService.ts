@@ -23,31 +23,31 @@ interface GameSession {
 class GameService {
   private sessions = new Map<string, GameSession>();
 
-  createGame(gameId: string, humanPlayerId = "player") {
+  createGame(gameId: string, playerId = "player") {
     if (this.sessions.has(gameId)) {
       throw new Error("Game already exists");
     }
 
-    const humanPlayer = new Player();
-    const computerInstance = new Computer();
+    const human = new Player();
+    const computer = new Computer();
 
     // Setup initial AI state
-    computerInstance.randomPopulate();
-    computerInstance.resetAI();
+    computer.randomPopulate();
+    computer.resetAI();
 
     const session: GameSession = {
       id: gameId,
       phase: "setup",
-      turn: humanPlayerId,
+      turn: playerId,
       history: [],
       participants: new Map([
         [
-          humanPlayerId,
+          playerId,
           {
-            id: humanPlayerId,
+            id: playerId,
             type: "human",
-            gameboard: humanPlayer.gameboard,
-            instance: humanPlayer, // store the class instance
+            gameboard: human.gameboard,
+            instance: human, // store the class instance
           },
         ],
         [
@@ -55,8 +55,8 @@ class GameService {
           {
             id: "computer",
             type: "ai",
-            gameboard: computerInstance.gameboard,
-            instance: computerInstance, // store the AI instance
+            gameboard: computer.gameboard,
+            instance: computer, // store the AI instance
           },
         ],
       ]),
