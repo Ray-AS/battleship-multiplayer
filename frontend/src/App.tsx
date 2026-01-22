@@ -75,26 +75,16 @@ function App() {
     }
   }
 
-  function startGame() {
-    console.log("Starting game");
-
-    computer.gameboard.clear();
-    computer.randomPopulate();
-    computer.resetAI();
-
-    // Ensure board is populated if player did not populate
-    if (player.gameboard.allShipsSunk()) {
-      player.randomPopulate();
+  async function startGame() {
+    const res = await api.startGame(gameId);
+    if (res.error) {
+      alert(res.error);
+      return;
     }
-
-    const playerTypes: PlayerType[] = ["Player", "Computer"];
-    const startingPlayer =
-      playerTypes[Math.floor(Math.random() * playerTypes.length)];
-
-    setWinner("None");
-    setRefreshTrigger(0);
-    setCurrentPlayer(startingPlayer);
-    setPhase("playing");
+    setPlayerBoard(res.boards.player);
+    setOpponentBoard(res.boards.opponent);
+    setPhase(res.phase);
+    setCurrentPlayer(res.turn === "player" ? "Player" : "Computer");
   }
 
   function randomizePlayerBoard() {
