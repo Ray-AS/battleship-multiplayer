@@ -1,0 +1,236 @@
+import { gameService } from "../services/gameService.ts";
+import { SHIPS } from "../configs.ts";
+import { Outcome } from "../models.ts";
+import type { Orientation } from "../models.ts";
+import type { Computer } from "../utils/computer.ts";
+
+// ------------------- GET GAME -------------------
+export async function getGame(sessionId: string) {
+  const session = gameService.getSession(sessionId);
+  if (!session) return { status: 404, data: { error: "Game not found" } };
+
+  const human = session.participants.get("player");
+  const ai = session.participants.get("computer");
+  if (!human || !ai)
+    return { status: 500, data: { error: "Participants not found" } };
+
+  return {
+    status: 200,
+    data: {
+      gameId: session.id,
+      phase: session.phase,
+      turn: session.turn,
+      boards: {
+        player: human.gameboard.getSnapshot(),
+        opponent: gameService.getMaskedBoard(ai.gameboard),
+      },
+    },
+  };
+}
+
+// ------------------- CREATE GAME -------------------
+export async function createGame(sessionId: string) {
+  const playerId = "player";
+
+  // Create game only if it exists
+  try {
+    const session = gameService.createGame(sessionId, playerId);
+    const human = session.participants.get(playerId);
+    const ai = session.participants.get("computer");
+
+    return {
+      status: 200,
+      data: {
+        gameId: sessionId,
+        phase: session.phase,
+        playerBoard: human?.gameboard.getSnapshot(),
+        opponentBoard: ai
+          ? gameService.getMaskedBoard(ai.gameboard)
+          : undefined,
+      },
+    };
+  } catch {
+    return { status: 400, data: { error: "Game already exists" } };
+  }
+}
+
+// ------------------- PLACE SHIP -------------------
+export async function placeShip(
+  sessionId: string,
+  body: {
+    playerId: string;
+    shipModel: string;
+    x: number;
+    y: number;
+    orientation: Orientation;
+  },
+) {
+  const { playerId, shipModel, x, y, orientation } = body;
+  const session = gameService.getSession(sessionId);
+  if (!session) return { status: 404, data: { error: "Game not found" } };
+
+  if (session.phase !== "setup")
+    return {
+      status: 400,
+      data: { error: "Ships can only be placed during setup phase" },
+    };
+
+  const participant = session.participants.get(playerId);
+  if (!participant) return { status: 404, data: { error: "Player not found" } };
+  if (participant.type !== "human")
+    return { status: 400, data: { error: "AI cannot place ships manually" } };
+
+  const shipSpec = SHIPS.find((s) => s.model === shipModel);
+  if (!shipSpec) return { status: 400, data: { error: "Invalid ship model" } };
+
+  const alreadyPlaced = participant.gameboard.ships.some(
+    (s) => s.specs.model === shipModel,
+  );
+  if (alreadyPlaced)
+    return { status: 400, data: { error: "Ship already placed" } };
+
+  const success = participant.gameboard.placeShip(
+    shipSpec,
+    { x, y },
+    orientation,
+  );
+  if (!success)
+    return { status: 400, data: { error: "Invalid ship placement" } };
+
+  return {
+    status: 200,
+    data: { success: true, board: participant.gameboard.getSnapshot() },
+  };
+}
+
+// ------------------- START GAME -------------------
+export async function startGame(sessionId: string) {
+  const session = gameService.getSession(sessionId);
+  if (!session) return { status: 404, data: { error: "Game not found" } };
+  if (session.phase !== "setup")
+    return { status: 400, data: { error: "Game has already started" } };
+
+  const human = session.participants.get("player");
+  const ai = session.participants.get("computer");
+  if (!human || !ai)
+    return { status: 500, data: { error: "Participants not found" } };
+
+  // Ensure all ships are placed
+  if (human.gameboard.ships.length === 0) human.instance.randomPopulate();
+  else if (human.gameboard.ships.length < SHIPS.length)
+    return { status: 400, data: { error: "Not all ships have been placed" } };
+
+  // Transition game state
+  session.phase = "playing";
+
+  // Decide first turn
+  session.turn = Math.random() < 0.5 ? "player" : "computer";
+
+  // Computer plays first if needed
+  if (session.turn === "computer") {
+    const aiInstance = ai.instance as Computer;
+    const coords = aiInstance.chooseAttack();
+    const result = human.gameboard.receiveAttack(coords);
+    aiInstance.registerOutcome(coords, result);
+
+    session.history.push({
+      attacker: "computer",
+      position: coords,
+      result,
+      timestamp: Date.now(),
+    });
+
+    // Handle (though very unlikely) edge case where player ships are all sunk after one move
+    if (human.gameboard.allShipsSunk()) session.phase = "ended";
+    else session.turn = "player";
+  }
+
+  return {
+    status: 200,
+    data: {
+      gameId: session.id,
+      phase: session.phase,
+      turn: session.turn,
+      boards: {
+        player: human.gameboard.getSnapshot(),
+        opponent: gameService.getMaskedBoard(ai.gameboard),
+      },
+    },
+  };
+}
+
+// ------------------- ATTACK -------------------
+export async function attack(
+  sessionId: string,
+  body: { x: number; y: number },
+) {
+  const { x, y } = body;
+  const session = gameService.getSession(sessionId);
+  if (!session) return { status: 404, data: { error: "Game not found" } };
+  if (session.phase !== "playing")
+    return { status: 400, data: { error: "Game is not in playing phase" } };
+  if (session.turn !== "player")
+    return { status: 400, data: { error: "It is not your turn" } };
+
+  const human = session.participants.get("player");
+  const ai = session.participants.get("computer");
+  if (!human || !ai)
+    return { status: 500, data: { error: "Participants not found" } };
+
+  // Player attacks AI
+  const playerAttack = ai.gameboard.receiveAttack({ x, y });
+  if (playerAttack.outcome === Outcome.UNAVAILABLE)
+    return { status: 400, data: { error: "Invalid move" } };
+
+  session.history.push({
+    attacker: "player",
+    position: { x, y },
+    result: playerAttack,
+    timestamp: Date.now(),
+  });
+
+  // Check if AI lost
+  if (ai.gameboard.allShipsSunk()) {
+    session.phase = "ended";
+    return {
+      status: 200,
+      data: {
+        playerAttack,
+        aiAttack: null,
+        phase: session.phase,
+        history: session.history,
+      },
+    };
+  }
+
+  // AI counterattacks
+  const aiInstance = ai.instance as Computer;
+  const aiCoords = aiInstance.chooseAttack();
+  const aiAttack = human.gameboard.receiveAttack(aiCoords);
+  aiInstance.registerOutcome(aiCoords, aiAttack);
+
+  session.history.push({
+    attacker: "computer",
+    position: aiCoords,
+    result: aiAttack,
+    timestamp: Date.now(),
+  });
+
+  // Check if player lost, otherwise transition to player turn
+  if (human.gameboard.allShipsSunk()) session.phase = "ended";
+  else session.turn = "player";
+
+  return {
+    status: 200,
+    data: {
+      playerAttack,
+      aiAttack,
+      boards: {
+        player: human.gameboard.getSnapshot(),
+        opponent: gameService.getMaskedBoard(ai.gameboard),
+      },
+      phase: session.phase,
+      history: session.history,
+    },
+  };
+}

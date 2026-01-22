@@ -1,4 +1,4 @@
-import { DEFAULT_BOARD_SIZE, SHIPS } from "../../configs.ts";
+import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs.ts";
 import {
   Outcome,
   type AttackOutcome,
@@ -6,7 +6,7 @@ import {
   type Position,
   type ShipModel,
   type SimulationBoard,
-} from "../../models.ts";
+} from "../models.ts";
 import { Player } from "./player.ts";
 
 export class Computer extends Player {
@@ -67,7 +67,7 @@ export class Computer extends Player {
         return;
 
       case Outcome.HIT:
-        // TS now knows attack has shipInfo
+        // Let Typescript know that attack has shipInfo
         const { shipInfo } = attack;
         this.knowledgeBoard[position.y][position.x] = "hit";
 

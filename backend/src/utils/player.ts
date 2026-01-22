@@ -1,5 +1,5 @@
-import { SHIPS } from "../../configs.ts";
-import type { Orientation, ShipModel } from "../../models.ts";
+import { SHIPS } from "../configs.ts";
+import type { Orientation, ShipModel } from "../models.ts";
 import { Gameboard } from "./gameboard.ts";
 
 export class Player {
@@ -9,7 +9,7 @@ export class Player {
     this.gameboard = new Gameboard();
   }
 
-  // Just pre-populate ships for now (TODO: add placement functionality)
+  // Just pre-population for testing
   populate() {
     for (let i = 0; i < SHIPS.length; i++) {
       const result = this.gameboard.placeShip(

@@ -5,7 +5,7 @@ import {
   type Position,
   type Orientation,
   type ShipModel,
-} from "../models.ts";
+} from "../src/models.ts";
 
 describe("Gameboard class", () => {
   function checkShipOnBoard(

@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import swaggerPlugin from "./plugins/swagger.ts";
-import { game } from "./routes/game.ts";
-import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs.ts";
+import { gameRoutes } from "./routes/gameRoutes.ts";
+import { DEFAULT_BOARD_SIZE, SHIPS } from "./configs.ts";
 
 const fastify = Fastify({ logger: true });
 export const PORT = 3000;
@@ -20,7 +20,7 @@ fastify.get("/", async () => {
 });
 
 // Handle all game routes
-fastify.register(game, { prefix: "/game" });
+fastify.register(gameRoutes, { prefix: "/game" });
 
 const start = async () => {
   try {

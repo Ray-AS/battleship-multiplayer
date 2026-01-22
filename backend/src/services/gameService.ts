@@ -1,7 +1,7 @@
 import { Player } from "../utils/player.ts";
 import { Computer } from "../utils/computer.ts";
 import { Gameboard } from "../utils/gameboard.ts";
-import type { GamePhase, Move } from "../../models.ts";
+import type { GamePhase, Move } from "../models.ts";
 
 export type ParticipantType = "human" | "ai";
 
@@ -9,7 +9,7 @@ export interface Participant {
   id: string;
   type: ParticipantType;
   gameboard: Gameboard;
-  instance: Player | Computer; // <--- store the original class instance
+  instance: Player | Computer;
 }
 
 interface GameSession {
@@ -47,7 +47,7 @@ class GameService {
             id: playerId,
             type: "human",
             gameboard: human.gameboard,
-            instance: human, // store the class instance
+            instance: human,
           },
         ],
         [
@@ -56,7 +56,7 @@ class GameService {
             id: "computer",
             type: "ai",
             gameboard: computer.gameboard,
-            instance: computer, // store the AI instance
+            instance: computer,
           },
         ],
       ]),

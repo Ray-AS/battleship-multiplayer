@@ -1,5 +1,5 @@
 import { SHIPS } from "./configs.ts";
-import type { Ship } from "./src/utils/ship.ts";
+import type { Ship } from "./utils/ship.ts";
 
 export interface Position {
   x: number;
