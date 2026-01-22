@@ -229,8 +229,25 @@ export async function attack(
   });
 
   // Check if player lost, otherwise transition to player turn
-  if (human.gameboard.allShipsSunk()) session.phase = "ended";
-  else session.turn = "player";
+  if (human.gameboard.allShipsSunk()) {
+    session.phase = "ended";
+    return {
+      status: 200,
+      data: {
+        playerAttack,
+        aiAttack,
+        boards: {
+          player: human.gameboard.getSnapshot(),
+          // Reveal enemy gameboard if player loses
+          opponent: ai.gameboard.getSnapshot(), 
+        },
+        phase: session.phase,
+        history: session.history,
+      },
+    };
+  } else {
+    session.turn = "player";
+  }
 
   return {
     status: 200,

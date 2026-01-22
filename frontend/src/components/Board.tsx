@@ -107,7 +107,7 @@ export default function Board({
               state={cell.type}
               position={position}
               disabled={disabled}
-              hide={playerRole === "Computer"} 
+              hide={playerRole === "Computer" && phase !== "ended"} 
               preview={isPreview}
               previewInvalid={isPreview && !isValidPlacement}
               interact={() => handleCellClick(position)}

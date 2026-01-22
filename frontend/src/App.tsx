@@ -23,6 +23,8 @@ function App() {
   const [winner, setWinner] = useState<PlayerType>("None");
   const [placement, setPlacement] = useState<PlacementState | null>(null);
 
+  const [delay, setDelay] = useState<number>(1);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -99,16 +101,28 @@ function App() {
       const res = await api.attack(gameId, position.x, position.y);
       if (res.error || !res.boards) return;
 
-      setPlayerBoard(res.boards.player);
+      // Only show opponent board; hold off on showing player board until the timeout is over for a more natural feel
       setOpponentBoard(res.boards.opponent);
-      setPhase(res.phase);
-
+      
       if (res.phase === "ended") {
         // If AI attack is null, it means player won on their turn
+        setPlayerBoard(res.boards.player);
+        setPhase(res.phase);
         setWinner(res.aiAttack === null ? "Player" : "Computer");
-      } else {
-        setCurrentPlayer("Player"); 
+        return;
       }
+
+      // Temporarily set current player to "Computer" to show AI is thinking
+      setCurrentPlayer("Computer");
+
+      // Delay attack based on user preference
+      setTimeout(() => {
+        if(res.error || !res.boards) return;
+        setPlayerBoard(res.boards.player);
+        setOpponentBoard(res.boards.opponent);
+        setCurrentPlayer("Player");
+        setPhase(res.phase);
+      }, delay * 1000);
     }
   }
 
@@ -150,9 +164,29 @@ function App() {
           </div>
         )}
         {phase === "playing" && (
-          <div className={`status-bar ${currentPlayer.toLowerCase()}`}>
-            {currentPlayer === "Player" ? "YOUR TURN" : "ENEMY ATTACKING..."}
-          </div>
+          <>
+            <div className={"settings"}>
+              <label>
+                AI Delay (s):{" "}
+                <input
+                  type="number"
+                  min={0}
+                  max={5}
+                  step={1}
+                  value={delay}
+                  onChange={(e) => {
+                    let val = Math.floor(Number(e.target.value)); // remove decimals
+                    if (val < 0) val = 0;
+                    if (val > 5) val = 5;
+                    setDelay(val);
+                  }}
+                />
+              </label>
+            </div>
+            <div className={`status-bar ${currentPlayer.toLowerCase()}`}>
+              {currentPlayer === "Player" ? "YOUR TURN" : "ENEMY ATTACKING..."}
+            </div>
+          </>
         )}
         {phase === "ended" && (
           <div className="game-over">
