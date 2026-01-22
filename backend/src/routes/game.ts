@@ -1,14 +1,14 @@
 import type { FastifyInstance } from "fastify";
 import { gameService } from "../services/gameService.ts";
 import { DEFAULT_BOARD_SIZE, SHIPS } from "../../configs.ts";
-import { Outcome } from "../../models.ts";
+import { Outcome, type Orientation } from "../../models.ts";
 import type { Computer } from "../utils/computer.ts";
 
 export async function game(fastify: FastifyInstance) {
   fastify.get("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-
     const session = gameService.getSession(id);
+
     if (!session) {
       return reply.status(404).send({ error: "Game not found" });
     }
@@ -17,9 +17,7 @@ export async function game(fastify: FastifyInstance) {
     const ai = session.participants.get("computer");
 
     if (!human || !ai) {
-      return reply
-        .status(500)
-        .send({ error: "Participants not found" });
+      return reply.status(500).send({ error: "Participants not found" });
     }
 
     return {
@@ -37,19 +35,20 @@ export async function game(fastify: FastifyInstance) {
   // Start Game: Initializes the session
   fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const humanPlayerId = "player"; // Or pass from frontend
-    
+    const humanPlayerId = "player";
+
     try {
       const session = gameService.createGame(id, humanPlayerId);
-  
       const humanParticipant = session.participants.get(humanPlayerId);
       const aiParticipant = session.participants.get("computer");
-  
+
       return {
         gameId: id,
         phase: session.phase,
         playerBoard: humanParticipant?.gameboard.getSnapshot(),
-        opponentBoard: aiParticipant ? gameService.getMaskedBoard(aiParticipant.gameboard) : undefined
+        opponentBoard: aiParticipant
+          ? gameService.getMaskedBoard(aiParticipant.gameboard)
+          : undefined,
       };
     } catch {
       return reply.status(400).send({ error: "Game already exists" });
@@ -66,9 +65,9 @@ export async function game(fastify: FastifyInstance) {
         shipModel: { type: "string" },
         x: { type: "integer", minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
         y: { type: "integer", minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
-        orientation: { enum: ["horizontal", "vertical"] }
-      }
-    }
+        orientation: { enum: ["horizontal", "vertical"] },
+      },
+    },
   };
 
   fastify.post(
@@ -81,7 +80,7 @@ export async function game(fastify: FastifyInstance) {
         shipModel: string;
         x: number;
         y: number;
-        orientation: "horizontal" | "vertical";
+        orientation: Orientation;
       };
 
       const session = gameService.getSession(id);
@@ -114,32 +113,28 @@ export async function game(fastify: FastifyInstance) {
 
       // Prevent placing the same ship twice
       const alreadyPlaced = participant.gameboard.ships.some(
-        (s) => s.specs.model === shipModel
+        (s) => s.specs.model === shipModel,
       );
       if (alreadyPlaced) {
-        return reply
-          .status(400)
-          .send({ error: "Ship already placed" });
+        return reply.status(400).send({ error: "Ship already placed" });
       }
 
       // Attempt placement
       const success = participant.gameboard.placeShip(
         shipSpec,
         { x, y },
-        orientation
+        orientation,
       );
 
       if (!success) {
-        return reply
-          .status(400)
-          .send({ error: "Invalid ship placement" });
+        return reply.status(400).send({ error: "Invalid ship placement" });
       }
 
       return {
         success: true,
         board: participant.gameboard.getSnapshot(),
       };
-    }
+    },
   );
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -152,46 +147,35 @@ export async function game(fastify: FastifyInstance) {
     }
 
     if (session.phase !== "setup") {
-      return reply
-        .status(400)
-        .send({ error: "Game has already started" });
+      return reply.status(400).send({ error: "Game has already started" });
     }
 
     const human = session.participants.get("player");
     const ai = session.participants.get("computer");
 
     if (!human || !ai) {
-      return reply
-        .status(500)
-        .send({ error: "Participants not found" });
+      return reply.status(500).send({ error: "Participants not found" });
     }
 
     // Ensure all ships are placed
-    const requiredShips = SHIPS.length;
-    const placedShips = human.gameboard.ships.length;
-
-    if (placedShips === 0) {
+    if (human.gameboard.ships.length === 0) {
       human.instance.randomPopulate();
-    } else if (placedShips < requiredShips) {
-      return reply.status(400).send({
-        error: "Not all ships have been placed",
-      });
+    } else if (human.gameboard.ships.length < SHIPS.length) {
+      return reply
+        .status(400)
+        .send({ error: "Not all ships have been placed" });
     }
 
     // Transition game state
     session.phase = "playing";
 
     // Decide first turn
-    const startingPlayer =
-      Math.random() < 0.5 ? "player" : "computer";
+    const startingPlayer = Math.random() < 0.5 ? "player" : "computer";
     session.turn = startingPlayer;
 
     // Ensure computer makes move if it starts
     if (session.turn === "computer") {
-      const ai = session.participants.get("computer")!;
-      const human = session.participants.get("player")!;
       const aiInstance = ai.instance as Computer;
-
       const coords = aiInstance.chooseAttack();
       const result = human.gameboard.receiveAttack(coords);
       aiInstance.registerOutcome(coords, result);
@@ -217,76 +201,79 @@ export async function game(fastify: FastifyInstance) {
     };
   });
 
-  
   ///////////////////////////////////////////////////////////////////////////////
   // Attack: Process player move and AI counter-move
   const attackBodySchema = {
-    type: 'object',
-    required: ['x', 'y'],
+    type: "object",
+    required: ["x", "y"],
     properties: {
-      x: { type: 'integer', minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
-      y: { type: 'integer', minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 }
-    }
+      x: { type: "integer", minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
+      y: { type: "integer", minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
+    },
   };
 
-
   // Add the schema to the route
-  fastify.post("/:id/attack", {
-    schema: {
-      body: attackBodySchema,
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' }
-        }
-      },
-      response: {
-        200: {
-          type: 'object',
+  fastify.post(
+    "/:id/attack",
+    {
+      schema: {
+        body: attackBodySchema,
+        params: {
+          type: "object",
           properties: {
-            playerAttack: { type: 'object', additionalProperties: true },
-            aiAttack: { 
-              type: 'object', 
-              nullable: true,
-              additionalProperties: true 
+            id: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              playerAttack: { type: "object", additionalProperties: true },
+              aiAttack: {
+                type: "object",
+                nullable: true,
+                additionalProperties: true,
+              },
+              boards: { type: "object", additionalProperties: true },
+              phase: { type: "string" },
+              history: {
+                type: "array",
+                items: { type: "object", additionalProperties: true },
+              },
             },
-            boards: { type: 'object', additionalProperties: true },
-            phase: { type: 'string' },
-            history: { 
-              type: 'array', 
-              items: { type: 'object', additionalProperties: true } 
-            }
-          }
+          },
+          400: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+            },
+          },
+          404: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+            },
+          },
+          500: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+            },
+          },
         },
-        400: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' }
-          }
-        },
-        404: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' }
-          }
-        },
-        500: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' }
-          }
-        },
-      }
-    }
-  }, async (request, reply) => {
-    const { id } = request.params as { id: string };
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
       const { x, y } = request.body as { x: number; y: number };
 
       const session = gameService.getSession(id);
       if (!session) return reply.status(404).send({ error: "Game not found" });
 
       if (session.phase !== "playing") {
-        return reply.status(400).send({ error: "Game is not in playing phase" });
+        return reply
+          .status(400)
+          .send({ error: "Game is not in playing phase" });
       }
 
       if (session.turn !== "player") {
@@ -310,14 +297,19 @@ export async function game(fastify: FastifyInstance) {
       session.history.push({
         attacker: "player",
         position: { x, y },
-        result: playerAttack, 
-        timestamp: Date.now()
+        result: playerAttack,
+        timestamp: Date.now(),
       });
 
       // Check if AI has lost
       if (aiParticipant.gameboard.allShipsSunk()) {
         session.phase = "ended";
-        return { playerAttack, aiAttack: null, phase: session.phase, history: session.history };
+        return {
+          playerAttack,
+          aiAttack: null,
+          phase: session.phase,
+          history: session.history,
+        };
       }
 
       // AI counterattacks if game not ended
@@ -330,7 +322,7 @@ export async function game(fastify: FastifyInstance) {
         attacker: "computer",
         position: aiCoords,
         result: aiAttack,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       if (humanParticipant.gameboard.allShipsSunk()) {
@@ -348,5 +340,6 @@ export async function game(fastify: FastifyInstance) {
         },
         phase: session.phase,
       };
-    });
+    },
+  );
 }

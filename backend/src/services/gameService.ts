@@ -23,7 +23,7 @@ interface GameSession {
 class GameService {
   private sessions = new Map<string, GameSession>();
 
-  createGame(gameId: string, humanPlayerId: string) {
+  createGame(gameId: string, humanPlayerId = "player") {
     if (this.sessions.has(gameId)) {
       throw new Error("Game already exists");
     }

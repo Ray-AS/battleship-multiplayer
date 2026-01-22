@@ -8,13 +8,13 @@ await fastify.register(swaggerPlugin);
 
 fastify.get("/", async () => {
   return {
-    "name": "Battleship API",
-    "status": "online",
-    "config": {
-      "boardSize": DEFAULT_BOARD_SIZE,
-      "ships": SHIPS
-    }
-  }
+    name: "Battleship API",
+    status: "online",
+    config: {
+      boardSize: DEFAULT_BOARD_SIZE,
+      ships: SHIPS,
+    },
+  };
 });
 
 fastify.register(game, { prefix: "/game" });
