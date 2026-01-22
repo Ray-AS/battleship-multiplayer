@@ -1,5 +1,5 @@
 import { gameService } from "../services/gameService.ts";
-import { SHIPS } from "../configs.ts";
+import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs.ts";
 import { Outcome } from "../models.ts";
 import type { Orientation } from "../models.ts";
 import type { Computer } from "../utils/computer.ts";
@@ -31,10 +31,18 @@ export async function getGame(sessionId: string) {
 // ------------------- CREATE GAME -------------------
 export async function createGame(sessionId: string) {
   const playerId = "player";
+  const emptyBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
+    Array.from({ length: DEFAULT_BOARD_SIZE }, () => ({ type: "empty" }))
+  );
 
   // Create game only if it exists
   try {
-    const session = gameService.createGame(sessionId, playerId);
+    let session = gameService.getSession(sessionId);
+
+    if (!session) {
+      session = gameService.createGame(sessionId, playerId);
+    }
+
     const human = session.participants.get(playerId);
     const ai = session.participants.get("computer");
 
@@ -43,10 +51,10 @@ export async function createGame(sessionId: string) {
       data: {
         gameId: sessionId,
         phase: session.phase,
-        playerBoard: human?.gameboard.getSnapshot(),
+        playerBoard: human?.gameboard.getSnapshot() || emptyBoard,
         opponentBoard: ai
           ? gameService.getMaskedBoard(ai.gameboard)
-          : undefined,
+          : emptyBoard,
       },
     };
   } catch {

@@ -36,7 +36,6 @@ function App() {
         setPhase("setup");
         setWinner("None");
         setCurrentPlayer("None");
-        setPlacement(null);
       }
     }
 
@@ -47,8 +46,34 @@ function App() {
   }, [gameId]);
 
   function startManualSetup() {
+    // Generate a new ID (this resets the backend via the useEffect)
+    const newId = uuidv4();
+    setGameId(newId); 
+    
+    // Set the placement state to start the manual process
     setPlacement({ index: 0, orientation: "horizontal" });
+    
+    // Reset local phase/winner state just in case
+    setPhase("setup");
+    setWinner("None");
+    setCurrentPlayer("None");
   }
+
+  function cancelSetup() {
+    const newId = uuidv4();
+    setGameId(newId);
+    setPhase("setup");
+    setPlayerBoard(Array.from({ length: 10 }, () =>
+      Array.from({ length: 10 }, () => ({ type: "empty" }))
+    ));
+    setOpponentBoard(Array.from({ length: 10 }, () =>
+      Array.from({ length: 10 }, () => ({ type: "empty" }))
+    ));
+    setPlacement(null);
+    setCurrentPlayer("None");
+    setWinner("None");
+  }
+ 
 
   async function handleCellClick(position: Position) {
     if (phase === "setup" && placement) {
@@ -119,7 +144,7 @@ function App() {
                 })}>
                   {placement.orientation}
                 </button>
-                <button onClick={() => setGameId(uuidv4())}>Cancel</button>
+                <button onClick={cancelSetup}>Cancel</button>
               </div>
             )}
           </div>
