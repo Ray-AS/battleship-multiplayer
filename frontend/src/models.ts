@@ -21,7 +21,7 @@ export interface Cell {
   };
 }
 
-export type BoardT = Cell[][];
+export type Board = Cell[][];
 
 /**
  * Using a constant object to mirror the backend Outcome enum/const
@@ -76,8 +76,8 @@ export interface GameResponse {
   phase: GamePhase;
   turn?: "player" | "computer";
   boards: {
-    player: BoardT;
-    opponent: BoardT; // This will be the masked version
+    player: Board;
+    opponent: Board; // This will be the masked version
   };
 }
 
@@ -85,10 +85,19 @@ export interface AttackResponse {
   playerAttack: AttackOutcome;
   aiAttack: AttackOutcome | null;
   boards?: {
-    player: BoardT;
-    opponent: BoardT;
+    player: Board;
+    opponent: Board;
   };
   phase: GamePhase;
+  turn?: "player" | "computer";
   history: Move[];
   error?: string;
+}
+
+export interface PlaceShipRequest {
+  playerId: string;
+  shipModel: ShipName;
+  x: number;
+  y: number;
+  orientation: Orientation;
 }

@@ -1,7 +1,7 @@
-import type { cellState, Position } from "../models";
+import type { CellState, Position } from "../models.ts";
 
 interface cellProps {
-  state: cellState;
+  state: CellState;
   position: Position;
   disabled: boolean;
   hide: boolean;
