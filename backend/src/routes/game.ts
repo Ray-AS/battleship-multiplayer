@@ -5,22 +5,7 @@ import { Outcome } from "../../models.ts";
 import type { Computer } from "../utils/computer.ts";
 
 export async function game(fastify: FastifyInstance) {
-  fastify.get("/:id", {
-    schema: {
-      params: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-        },
-      },
-      querystring: {
-        type: "object",
-        properties: {
-          viewer: { type: "string" },
-        },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.get("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const session = gameService.getSession(id);
@@ -50,16 +35,7 @@ export async function game(fastify: FastifyInstance) {
   ///////////////////////////////////////////////////////////////////////////////
 
   // Start Game: Initializes the session
-  fastify.post("/:id", {
-    schema: {
-      params: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-        },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
     const humanPlayerId = "player"; // Or pass from frontend
     
@@ -167,16 +143,7 @@ export async function game(fastify: FastifyInstance) {
   );
 
   ///////////////////////////////////////////////////////////////////////////////
-  fastify.post("/:id/start", {
-    schema: {
-      params: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-        },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.post("/:id/start", {}, async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const session = gameService.getSession(id);
