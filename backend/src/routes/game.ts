@@ -32,6 +32,7 @@ export async function game(fastify: FastifyInstance) {
       },
     };
   });
+  ///////////////////////////////////////////////////////////////////////////////
 
   // Start Game: Initializes the session
   fastify.post("/:id", async (request, reply) => {
@@ -255,6 +256,10 @@ export async function game(fastify: FastifyInstance) {
         return reply.status(400).send({ error: "Game is not in playing phase" });
       }
 
+      if (session.turn !== "player") {
+        return reply.status(400).send({ error: "It is not your turn" });
+      }
+
       const humanParticipant = session.participants.get("player");
       const aiParticipant = session.participants.get("computer");
 
@@ -283,6 +288,10 @@ export async function game(fastify: FastifyInstance) {
         const aiCoords = aiInstance.chooseAttack();
         aiAttack = humanParticipant.gameboard.receiveAttack(aiCoords);
         aiInstance.registerOutcome(aiCoords, aiAttack);
+      }
+
+      if (humanParticipant.gameboard.allShipsSunk()) {
+        session.phase = "ended";
       }
 
       return {
