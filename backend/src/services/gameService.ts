@@ -1,7 +1,7 @@
 import { Player } from "../utils/player.ts";
 import { Computer } from "../utils/computer.ts";
 import { Gameboard } from "../utils/gameboard.ts";
-import type { GamePhase } from "../../models.ts";
+import type { GamePhase, Move } from "../../models.ts";
 
 export type ParticipantType = "human" | "ai";
 
@@ -16,13 +16,18 @@ interface GameSession {
   id: string;
   participants: Map<string, Participant>;
   phase: GamePhase;
-  turn: string; // The ID of the participant whose turn it is
+  turn: string;
+  history: Move[];
 }
 
 class GameService {
   private sessions = new Map<string, GameSession>();
 
   createGame(gameId: string, humanPlayerId: string) {
+    if (this.sessions.has(gameId)) {
+      throw new Error("Game already exists");
+    }
+
     const humanPlayer = new Player();
     const computerInstance = new Computer();
 
@@ -34,6 +39,7 @@ class GameService {
       id: gameId,
       phase: "setup",
       turn: humanPlayerId,
+      history: [],
       participants: new Map([
         [
           humanPlayerId,
