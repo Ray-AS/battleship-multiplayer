@@ -3,9 +3,36 @@ import { gameService } from "../services/gameService.ts";
 import { DEFAULT_BOARD_SIZE, SHIPS } from "../../configs.ts";
 import { Outcome } from "../../models.ts";
 import type { Computer } from "../utils/computer.ts";
-import { request } from "node:http";
 
 export async function game(fastify: FastifyInstance) {
+  fastify.get("/:id", async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const session = gameService.getSession(id);
+    if (!session) {
+      return reply.status(404).send({ error: "Game not found" });
+    }
+
+    const human = session.participants.get("player");
+    const ai = session.participants.get("computer");
+
+    if (!human || !ai) {
+      return reply
+        .status(500)
+        .send({ error: "Participants not found" });
+    }
+
+    return {
+      gameId: session.id,
+      phase: session.phase,
+      turn: session.turn,
+      boards: {
+        player: human.gameboard.getSnapshot(),
+        opponent: gameService.getMaskedBoard(ai.gameboard),
+      },
+    };
+  });
+
   // Start Game: Initializes the session
   fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
