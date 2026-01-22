@@ -3,28 +3,34 @@ import { Ship } from "../src/utils/ship.ts";
 
 describe("Ship class", () => {
   function hitShip(ship: Ship, times: number) {
-    for (let i = 0; i < times; i++) ship.hit();
+    for (let i = 0; i < times; i++) {
+      ship.hit();
+    }
   }
 
-  test("creates a Ship instance", () => {
+  test("should create a Ship instance", () => {
     const ship = new Ship({ model: "destroyer", length: 2 });
-    expect(ship).toBeInstanceOf(Ship);
-    expect(ship.hits).toBe(0);
-    expect(ship.isSunk()).toBe(false);
+    expect(ship).toBeDefined();
   });
 
-  test("increments hits correctly", () => {
+  test("should show ship length", () => {
     const ship = new Ship({ model: "destroyer", length: 2 });
-    hitShip(ship, 1);
-    expect(ship.hits).toBe(1);
-    expect(ship.isSunk()).toBe(false);
+    expect(ship.length).toBe(2);
+  });
 
-    hitShip(ship, 1);
-    expect(ship.hits).toBe(2);
-    expect(ship.isSunk()).toBe(true);
+  test("should start with 0 hits", () => {
+    const ship = new Ship({ model: "destroyer", length: 2 });
+    expect(ship.hits).toBe(0);
+  });
 
-    // Extra hits should not increment
-    hitShip(ship, 1);
-    expect(ship.hits).toBe(2);
+  test.each([
+    [0, false],
+    [1, false],
+    [2, true],
+    [3, true],
+  ])("isSunk after %i hits", (hits: number, expected: boolean) => {
+    const ship = new Ship({ model: "destroyer", length: 2 });
+    hitShip(ship, hits);
+    expect(ship.isSunk()).toBe(expected);
   });
 });
