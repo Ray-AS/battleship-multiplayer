@@ -2,7 +2,9 @@ import fp from "fastify-plugin";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
 import type { FastifyPluginAsync } from "fastify";
+import { PORT } from "../index.ts";
 
+// Define basic function to initialize swagger documentation fastify plugin
 const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
   await fastify.register(swagger, {
     openapi: {
@@ -13,7 +15,7 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
       },
       servers: [
         {
-          url: "http://localhost:3000",
+          url: "http://localhost:" + PORT,
           description: "Local dev",
         },
       ],
