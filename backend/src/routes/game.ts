@@ -1,12 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { gameService } from "../services/gameService.ts";
-import { DEFAULT_BOARD_SIZE } from "../../configs.ts";
+import { DEFAULT_BOARD_SIZE, SHIPS } from "../../configs.ts";
 import { Outcome } from "../../models.ts";
 import type { Computer } from "../utils/computer.ts";
+import { request } from "node:http";
 
 export async function game(fastify: FastifyInstance) {
   // Start Game: Initializes the session
-  fastify.post("/:id/start", async (request, reply) => {
+  fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
     const humanPlayerId = "player"; // Or pass from frontend
     
@@ -23,6 +24,149 @@ export async function game(fastify: FastifyInstance) {
     };
   });
 
+  ///////////////////////////////////////////////////////////////////////////////
+  const placeShipSchema = {
+    body: {
+      type: "object",
+      required: ["playerId", "shipModel", "x", "y", "orientation"],
+      properties: {
+        playerId: { type: "string" },
+        shipModel: { type: "string" },
+        x: { type: "integer", minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
+        y: { type: "integer", minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
+        orientation: { enum: ["horizontal", "vertical"] }
+      }
+    }
+  };
+
+  fastify.post(
+    "/:id/place",
+    { schema: placeShipSchema },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const { playerId, shipModel, x, y, orientation } = request.body as {
+        playerId: string;
+        shipModel: string;
+        x: number;
+        y: number;
+        orientation: "horizontal" | "vertical";
+      };
+
+      const session = gameService.getSession(id);
+      if (!session) {
+        return reply.status(404).send({ error: "Game not found" });
+      }
+
+      if (session.phase !== "setup") {
+        return reply
+          .status(400)
+          .send({ error: "Ships can only be placed during setup phase" });
+      }
+
+      const participant = session.participants.get(playerId);
+      if (!participant) {
+        return reply.status(404).send({ error: "Player not found" });
+      }
+
+      if (participant.type !== "human") {
+        return reply
+          .status(400)
+          .send({ error: "AI cannot place ships manually" });
+      }
+
+      // Find ship model from config
+      const shipSpec = SHIPS.find((s) => s.model === shipModel);
+      if (!shipSpec) {
+        return reply.status(400).send({ error: "Invalid ship model" });
+      }
+
+      // Prevent placing the same ship twice
+      const alreadyPlaced = participant.gameboard.ships.some(
+        (s) => s.specs.model === shipModel
+      );
+      if (alreadyPlaced) {
+        return reply
+          .status(400)
+          .send({ error: "Ship already placed" });
+      }
+
+      // Attempt placement
+      const success = participant.gameboard.placeShip(
+        shipSpec,
+        { x, y },
+        orientation
+      );
+
+      if (!success) {
+        return reply
+          .status(400)
+          .send({ error: "Invalid ship placement" });
+      }
+
+      return {
+        success: true,
+        board: participant.gameboard.getSnapshot(),
+      };
+    }
+  );
+
+  ///////////////////////////////////////////////////////////////////////////////
+  fastify.post("/:id/start", {}, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const session = gameService.getSession(id);
+    if (!session) {
+      return reply.status(404).send({ error: "Game not found" });
+    }
+
+    if (session.phase !== "setup") {
+      return reply
+        .status(400)
+        .send({ error: "Game has already started" });
+    }
+
+    const human = session.participants.get("player");
+    const ai = session.participants.get("computer");
+
+    if (!human || !ai) {
+      return reply
+        .status(500)
+        .send({ error: "Participants not found" });
+    }
+
+    // Ensure all ships are placed
+    const requiredShips = SHIPS.length;
+    const placedShips = human.gameboard.ships.length;
+
+    if (placedShips === 0) {
+      human.instance.randomPopulate();
+    } else if (placedShips < requiredShips) {
+      return reply.status(400).send({
+        error: "Not all ships have been placed",
+      });
+    }
+
+    // Transition game state
+    session.phase = "playing";
+
+    // Decide first turn
+    const startingPlayer =
+      Math.random() < 0.5 ? "player" : "computer";
+    session.turn = startingPlayer;
+
+    return {
+      gameId: session.id,
+      phase: session.phase,
+      turn: session.turn,
+      boards: {
+        player: human.gameboard.getSnapshot(),
+        opponent: gameService.getMaskedBoard(ai.gameboard),
+      },
+    };
+  });
+
+  
+  ///////////////////////////////////////////////////////////////////////////////
   // Attack: Process player move and AI counter-move
   const attackBodySchema = {
     type: 'object',
@@ -32,6 +176,7 @@ export async function game(fastify: FastifyInstance) {
       y: { type: 'integer', minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 }
     }
   };
+
 
   // Add the schema to the route
   fastify.post("/:id/attack", {
