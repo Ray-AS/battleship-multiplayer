@@ -79,9 +79,11 @@ describe("Gameboard class", () => {
 
     const hitResult = gameboard.receiveAttack(shipStart);
     expect(hitResult.outcome).toBe(Outcome.HIT);
+    expect(gameboard.getSnapshot()[shipStart.y][shipStart.x].type).toBe("hit");
 
     const missResult = gameboard.receiveAttack({ x: 5, y: 5 });
     expect(missResult.outcome).toBe(Outcome.MISS);
+    expect(gameboard.getSnapshot()[5][5].type).toBe("miss");
 
     // Cannot attack same cell twice
     const unavailableResult = gameboard.receiveAttack(shipStart);
@@ -119,6 +121,27 @@ describe("Gameboard class", () => {
     gameboard.receiveAttack({ x: 2, y: 2 });
     gameboard.receiveAttack({ x: 2, y: 3 });
     expect(gameboard.allShipsSunk()).toBe(true);
+  });
+
+  test("returns ship positions only when sunk", () => {
+    const gameboard = new Gameboard();
+    gameboard.placeShip(
+      { model: "destroyer", length: 2 },
+      { x: 0, y: 0 },
+      "horizontal",
+    );
+
+    const hit1 = gameboard.receiveAttack({ x: 0, y: 0 });
+    expect(hit1.outcome).toBe(Outcome.HIT);
+    if (hit1.outcome === Outcome.HIT) {
+      expect(hit1.shipInfo.positions).toBeUndefined();
+    }
+
+    const hit2 = gameboard.receiveAttack({ x: 1, y: 0 });
+    expect(hit2.outcome).toBe(Outcome.HIT);
+    if (hit2.outcome === Outcome.HIT) {
+      expect(hit2.shipInfo.positions).toHaveLength(2);
+    }
   });
 
   test("clear resets board and ships", () => {
