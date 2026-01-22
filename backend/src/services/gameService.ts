@@ -3,37 +3,72 @@ import { Computer } from "../utils/computer.ts";
 import { Gameboard } from "../utils/gameboard.ts";
 import type { GamePhase } from "../../models.ts";
 
+export type ParticipantType = "human" | "ai";
+
+export interface Participant {
+  id: string;
+  type: ParticipantType;
+  gameboard: Gameboard;
+  instance: Player | Computer; // <--- store the original class instance
+}
+
 interface GameSession {
-  player: Player;
-  computer: Computer;
+  id: string;
+  participants: Map<string, Participant>;
   phase: GamePhase;
+  turn: string; // The ID of the participant whose turn it is
 }
 
 class GameService {
   private sessions = new Map<string, GameSession>();
 
-  createGame(id: string) {
+  createGame(gameId: string, humanPlayerId: string) {
+    const humanPlayer = new Player();
+    const computerInstance = new Computer();
+
+    // Setup initial AI state
+    computerInstance.randomPopulate();
+    computerInstance.resetAI();
+
     const session: GameSession = {
-      player: new Player(),
-      computer: new Computer(), // Computer is treated as an independent instance
+      id: gameId,
       phase: "setup",
+      turn: humanPlayerId,
+      participants: new Map([
+        [
+          humanPlayerId,
+          {
+            id: humanPlayerId,
+            type: "human",
+            gameboard: humanPlayer.gameboard,
+            instance: humanPlayer, // store the class instance
+          },
+        ],
+        [
+          "computer",
+          {
+            id: "computer",
+            type: "ai",
+            gameboard: computerInstance.gameboard,
+            instance: computerInstance, // store the AI instance
+          },
+        ],
+      ]),
     };
-    // Initialize AI state
-    session.computer.randomPopulate();
-    session.computer.resetAI();
-    this.sessions.set(id, session);
+
+    this.sessions.set(gameId, session);
     return session;
   }
 
-  getSession(id: string) {
+  getSession(id: string): GameSession | undefined {
     return this.sessions.get(id);
   }
 
   // Helper to hide computer ships from the frontend
   getMaskedBoard(gameboard: Gameboard) {
     const snapshot = gameboard.getSnapshot();
-    return snapshot.map(row => 
-      row.map(cell => (cell.type === "ship" ? { type: "empty" } : cell))
+    return snapshot.map((row) =>
+      row.map((cell) => (cell.type === "ship" ? { type: "empty" } : cell)),
     );
   }
 }

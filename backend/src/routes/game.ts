@@ -1,17 +1,25 @@
 import type { FastifyInstance } from "fastify";
 import { gameService } from "../services/gameService.ts";
+import { DEFAULT_BOARD_SIZE } from "../../configs.ts";
+import { Outcome } from "../../models.ts";
+import type { Computer } from "../utils/computer.ts";
 
 export async function game(fastify: FastifyInstance) {
   // Start Game: Initializes the session
   fastify.post("/:id/start", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const session = gameService.createGame(id);
+    const humanPlayerId = "player"; // Or pass from frontend
+    
+    const session = gameService.createGame(id, humanPlayerId);
+
+    const humanParticipant = session.participants.get(humanPlayerId);
+    const aiParticipant = session.participants.get("computer");
 
     return {
       gameId: id,
       phase: session.phase,
-      playerBoard: session.player.gameboard.getSnapshot(),
-      opponentBoard: gameService.getMaskedBoard(session.computer.gameboard)
+      playerBoard: humanParticipant?.gameboard.getSnapshot(),
+      opponentBoard: aiParticipant ? gameService.getMaskedBoard(aiParticipant.gameboard) : undefined
     };
   });
 
@@ -20,8 +28,8 @@ export async function game(fastify: FastifyInstance) {
     type: 'object',
     required: ['x', 'y'],
     properties: {
-      x: { type: 'integer', minimum: 0 },
-      y: { type: 'integer', minimum: 0 }
+      x: { type: 'integer', minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 },
+      y: { type: 'integer', minimum: 0, maximum: DEFAULT_BOARD_SIZE - 1 }
     }
   };
 
@@ -44,36 +52,75 @@ export async function game(fastify: FastifyInstance) {
             boards: { type: 'object', additionalProperties: true }
           }
         },
+        400: {
+          type: 'object',
+          properties: {
+            error: { type: 'string' }
+          }
+        },
         404: {
           type: 'object',
           properties: {
             error: { type: 'string' }
           }
-        }
+        },
+        500: {
+          type: 'object',
+          properties: {
+            error: { type: 'string' }
+          }
+        },
       }
     }
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { x, y } = request.body as { x: number, y: number };
-    const session = gameService.getSession(id);
+      const { x, y } = request.body as { x: number; y: number };
 
-    if (!session) return reply.status(404).send({ error: "Game not found" });
+      const session = gameService.getSession(id);
+      if (!session) return reply.status(404).send({ error: "Game not found" });
 
-    // 1. Player attacks Computer
-    const playerAttack = session.computer.gameboard.receiveAttack({ x, y });
-    
-    // 2. Computer (AI Socket) counter-attacks
-    const aiCoords = session.computer.chooseAttack();
-    const aiAttack = session.player.gameboard.receiveAttack(aiCoords);
-    session.computer.registerOutcome(aiCoords, aiAttack);
-
-    return {
-      playerAttack,
-      aiAttack: { coords: aiCoords, ...aiAttack },
-      boards: {
-        player: session.player.gameboard.getSnapshot(),
-        opponent: gameService.getMaskedBoard(session.computer.gameboard)
+      if (session.phase !== "playing") {
+        return reply.status(400).send({ error: "Game is not in playing phase" });
       }
-    };
-  });
+
+      const humanParticipant = session.participants.get("player");
+      const aiParticipant = session.participants.get("computer");
+
+      if (!humanParticipant || !aiParticipant) {
+        return reply.status(500).send({ error: "Participants not found" });
+      }
+
+      // Player attacks AI
+      const playerAttack = aiParticipant.gameboard.receiveAttack({ x, y });
+
+      if (playerAttack.outcome === Outcome.UNAVAILABLE) {
+        return reply.status(400).send({ error: "Invalid move" });
+      }
+
+      // Check if AI has lost
+      let gameEnded = false;
+      if (aiParticipant.gameboard.allShipsSunk()) {
+        session.phase = "ended";
+        gameEnded = true;
+      }
+
+      // AI counterattacks if game not ended
+      let aiAttack: any = null;
+      if (!gameEnded) {
+        const aiInstance = aiParticipant.instance as Computer; // typecast
+        const aiCoords = aiInstance.chooseAttack();
+        aiAttack = humanParticipant.gameboard.receiveAttack(aiCoords);
+        aiInstance.registerOutcome(aiCoords, aiAttack);
+      }
+
+      return {
+        playerAttack,
+        aiAttack,
+        boards: {
+          player: humanParticipant.gameboard.getSnapshot(),
+          opponent: gameService.getMaskedBoard(aiParticipant.gameboard),
+        },
+        phase: session.phase,
+      };
+    });
 }
