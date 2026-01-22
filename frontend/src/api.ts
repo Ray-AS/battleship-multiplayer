@@ -1,0 +1,26 @@
+const API_URL = "http://localhost:3000/game";
+
+export const api = {
+  createGame: (id: string) => 
+    fetch(`${API_URL}/${id}`, { method: "POST" }).then(r => r.json()),
+
+  placeShip: (id: string, body: any) => 
+    fetch(`${API_URL}/${id}/place`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(r => r.json()),
+
+  startGame: (id: string) => 
+    fetch(`${API_URL}/${id}/start`, { method: "POST" }).then(r => r.json()),
+
+  attack: (id: string, x: number, y: number) => 
+    fetch(`${API_URL}/${id}/attack`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y }),
+    }).then(r => r.json()),
+    
+  getGame: (id: string) => 
+    fetch(`${API_URL}/${id}`).then(r => r.json()),
+};
