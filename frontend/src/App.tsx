@@ -12,6 +12,7 @@ import type {
 import { PlayerContext } from "./components/PlayerContext";
 import { api } from "./api.ts";
 import { v4 as uuidv4 } from 'uuid';
+import { SHIPS } from "./configs.ts";
 
 function App() {
   const [gameId] = useState(uuidv4());
@@ -36,23 +37,26 @@ function App() {
   //   setRefreshTrigger((prev) => prev + 1);
   // }
 
-  function handleCellClick(position: Position) {
+  async function handleCellClick(position: Position) {
     if (phase !== "setup" || !placement) return;
 
-    const shipToPlace = SHIPS[placement.index];
-    const success = player.gameboard.placeShip(
-      shipToPlace as ShipModel,
-      position,
-      placement.orientation
-    );
+    const res = await api.placeShip(gameId, {
+      playerId: "player",
+      shipModel: SHIPS[placement.index].model,
+      x: position.x,
+      y: position.y,
+      orientation: placement.orientation
+    });
 
-    if (success) {
+    if (res.board) {
+      setPlayerBoard(res.board);
       if (placement.index < SHIPS.length - 1) {
         setPlacement({ ...placement, index: placement.index + 1 });
       } else {
-        setPlacement(null); // All ships placed!
+        setPlacement(null);
       }
-      setRefreshTrigger((prev) => prev + 1);
+    } else {
+      alert(res.error || "Invalid Placement");
     }
   }
 
