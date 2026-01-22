@@ -1,0 +1,81 @@
+:root {
+  --board-size: 450px;
+}
+
+.board {
+  display: grid;
+  width: var(--board-size);
+  height: var(--board-size);
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  border-radius: 5px;
+  box-shadow: 0 0 8px 2px rgba(186, 186, 186, 0.6);
+}
+
+button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(37, 46, 66);
+  font-size: 25px;
+  font-weight: bolder;
+  cursor: crosshair;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.cell:enabled:hover {
+  box-shadow: 0 0 8px 2px rgba(105, 23, 23, 0.6);
+  transform: scale(1.01);
+}
+
+.cell:enabled:active {
+  transform: scale(0.99);
+  box-shadow: 0 0 8px 2px rgba(90, 40, 40, 0.6);
+}
+
+.cell:disabled {
+  cursor: default;
+}
+
+.cell:disabled:hover {
+  box-shadow: 0 0 8px 2px rgba(186, 186, 186, 0.6);
+  transform: scale(1.01);
+}
+
+.cell.hit {
+  background-color: rgb(112, 66, 66);
+}
+
+.cell.miss {
+  background-color: rgb(47, 47, 47);
+}
+
+.cell.ship {
+  background-color: rgb(36, 36, 36);
+}
+
+.cell.preview-valid {
+  background-color: rgba(0, 255, 0, 0.3);
+  border: 1px dashed green;
+}
+
+.cell.preview-valid:hover {
+  box-shadow: 0 0 8px 2px rgba(12, 158, 21, 0.6);
+}
+
+.cell.preview-invalid {
+  background-color: rgba(255, 0, 0, 0.3);
+  border: 1px dashed rgb(128, 0, 0);
+}
+
+.cell.preview-invalid:hover {
+  box-shadow: 0 0 8px 2px rgba(158, 12, 12, 0.6);
+}
