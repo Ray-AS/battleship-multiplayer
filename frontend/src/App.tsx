@@ -60,6 +60,21 @@ function App() {
     }
   }
 
+  async function handleAttack(position: Position) {
+    const res = await api.attack(gameId, position.x, position.y);
+    if (res.error) return;
+
+    // The backend returns both player attack and AI's counterattack
+    setPlayerBoard(res.boards.player);
+    setOpponentBoard(res.boards.opponent);
+    setPhase(res.phase);
+
+    if (res.phase === "ended") {
+      // If AI has no counterattack or the last move ended it
+      setWinner(res.aiAttack === null ? "Player" : "Computer");
+    }
+  }
+
   function startGame() {
     console.log("Starting game");
 
