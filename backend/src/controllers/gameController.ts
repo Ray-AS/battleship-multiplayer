@@ -375,3 +375,31 @@ export async function joinGame(
     },
   };
 }
+
+// ------------------- CLEAR SHIPS -------------------
+export async function clearShips(
+  sessionId: string,
+  playerId: string,
+) {
+  const session = gameService.getSession(sessionId);
+  if (!session) return { status: 404, data: { error: "Game not found" } };
+
+  if (session.phase !== "setup")
+    return {
+      status: 400,
+      data: { error: "Ships can only be cleared during setup phase" },
+    };
+
+  const participant = session.participants.get(playerId);
+  if (!participant) return { status: 404, data: { error: "Player not found" } };
+
+  if (participant.type !== "human")
+    return { status: 400, data: { error: "AI cannot clear ships manually" } };
+
+  participant.gameboard.clear();
+
+  return {
+    status: 200,
+    data: { success: true, board: participant.gameboard.getSnapshot() },
+  };
+}
