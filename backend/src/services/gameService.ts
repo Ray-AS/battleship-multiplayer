@@ -10,6 +10,7 @@ export interface Participant {
   type: ParticipantType;
   gameboard: Gameboard;
   instance: Player | Computer;
+  ready: boolean;
 }
 
 interface GameSession {
@@ -18,6 +19,7 @@ interface GameSession {
   phase: GamePhase;
   turn: string;
   history: Move[];
+  isMultiplayer: boolean;
 }
 
 class GameService {
