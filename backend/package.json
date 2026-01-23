@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "start": "node dist/index.js",
-    "test": "vitest run",
+    "test": "vitest run --reporter=verbose",
     "test:watch": "vitest"
   },
   "repository": {
@@ -23,6 +23,7 @@
   "homepage": "https://github.com/Ray-AS/battleship-multiplayer#readme",
   "devDependencies": {
     "@types/node": "^25.0.9",
+    "@vitest/coverage-v8": "^4.0.17",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",

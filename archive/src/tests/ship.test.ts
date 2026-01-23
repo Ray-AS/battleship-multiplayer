@@ -13,21 +13,24 @@ describe("Ship class", () => {
     expect(ship).toBeDefined();
   });
 
-  test("should increment number of hits", () => {
+  test("should show ship length", () => {
     const ship = new Ship({ model: "destroyer", length: 2 });
-    hitShip(ship, 1);
-    expect(ship.hits).toBe(1);
+    expect(ship.length).toBe(2);
   });
 
-  test("shouldn't sink when not enough hits", () => {
+  test("should start with 0 hits", () => {
     const ship = new Ship({ model: "destroyer", length: 2 });
-    hitShip(ship, 1);
-    expect(ship.isSunk()).toBe(false);
+    expect(ship.hits).toBe(0);
   });
 
-  test("should sink after enough hits", () => {
+  test.each([
+    [0, false],
+    [1, false],
+    [2, true],
+    [3, true],
+  ])("isSunk after %i hits", (hits: number, expected: boolean) => {
     const ship = new Ship({ model: "destroyer", length: 2 });
-    hitShip(ship, 2);
-    expect(ship.isSunk()).toBe(true);
+    hitShip(ship, hits);
+    expect(ship.isSunk()).toBe(expected);
   });
 });
