@@ -3,6 +3,7 @@ import { DEFAULT_BOARD_SIZE, SHIPS } from "../configs.ts";
 import { Outcome } from "../models.ts";
 import type { Orientation } from "../models.ts";
 import type { Computer } from "../utils/computer.ts";
+import { Player } from "../utils/player.ts";
 
 // ------------------- GET GAME -------------------
 export async function getGame(sessionId: string, playerId: string) {
@@ -331,6 +332,46 @@ export async function attack(
       phase: session.phase,
       turn: session.turn,
       history: session.history,
+    },
+  };
+}
+
+// ------------------- JOIN GAME -------------------
+export async function joinGame(
+  sessionId: string,
+  playerId: string,
+) {
+  const session = gameService.getSession(sessionId);
+  if (!session) return { status: 404, data: { error: "Game not found" } };
+
+  if(!session.isMultiplayer) {
+    return { status: 400, data: { error: "Cannot join a singleplayer game" } };
+  }
+
+  if (session.participants.has(playerId)) {
+    return { status: 400, data: { error: "Player ID already taken in this game" } };
+  }
+
+  if (session.participants.size >= 2) {
+    return { status: 400, data: { error: "Game is already full" } };
+  }
+
+  const player = new Player();
+
+  session.participants.set(playerId, {
+    id: playerId,
+    type: "human",
+    gameboard: player.gameboard,
+    instance: player,
+    ready: false,
+  });
+
+  return {
+    status: 200,
+    data: {
+      gameId: session.id,
+      phase: session.phase,
+      playerBoard: player.gameboard.getSnapshot(),
     },
   };
 }
