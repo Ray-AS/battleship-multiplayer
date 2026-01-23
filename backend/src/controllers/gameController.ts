@@ -126,57 +126,106 @@ export async function placeShip(
 }
 
 // ------------------- START GAME -------------------
-export async function startGame(sessionId: string) {
+export async function startGame(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
+  
   if (!session) return { status: 404, data: { error: "Game not found" } };
   if (session.phase !== "setup")
     return { status: 400, data: { error: "Game has already started" } };
 
-  const human = session.participants.get("player");
+  if (!playerId) {
+    console.error("No playerId provided to startGame!");
+    return { status: 400, data: { error: "Player ID is required" } };
+  }
+
+  console.log("Session participants:", Array.from(session.participants.keys()));
+
+  const human = session.participants.get(playerId);
   const ai = session.participants.get("computer");
   if (!human || !ai)
     return { status: 500, data: { error: "Participants not found" } };
 
-  // Ensure all ships are placed
-  if (human.gameboard.ships.length === 0) human.instance.randomPopulate();
-  else if (human.gameboard.ships.length < SHIPS.length)
-    return { status: 400, data: { error: "Not all ships have been placed" } };
+  // Ensure two players are present in multiplayer mode
+  if (session.isMultiplayer && session.participants.size < 2) {
+    return {
+      status: 400,
+      data: { error: "Waiting for second player to join" },
+    };
+  }
 
-  // Transition game state
+  const player = session.participants.get(playerId);
+
+  if(!player) {
+    return { status: 404, data: { error: "Player not found in session" } };
+  }
+
+  if (player.type !== "human") {
+    return { status: 400, data: { error: "Only human players can start the game" } };
+  }
+
+  if(player.gameboard.ships.length == 0) {
+    player.instance.randomPopulate();
+  } else if (player.gameboard.ships.length < SHIPS.length) {
+    return { status: 400, data: { error: "Not all ships have been placed" } };
+  }
+
+  player.ready = true;
+
+  // In multiplayer, wait for both players to be ready
+  if (session.isMultiplayer) {
+    const allReady = Array.from(session.participants.values())
+      .filter(p => p.type === "human")
+      .every(p => p.ready);
+
+    if (!allReady) {
+      return {
+        status: 200,
+        data: { message: "Waiting for other player to be ready" },
+      };
+    }
+  }
+
+  // Transition game state if singleplayer or both players ready
   session.phase = "playing";
 
   // Decide first turn
-  session.turn = Math.random() < 0.5 ? "player" : "computer";
+  const players = Array.from(session.participants.keys());
+  session.turn = players[Math.floor(Math.random() * players.length)];
 
-  // Computer plays first if needed
-  if (session.turn === "computer") {
-    const aiInstance = ai.instance as Computer;
-    const coords = aiInstance.chooseAttack();
-    const result = human.gameboard.receiveAttack(coords);
-    aiInstance.registerOutcome(coords, result);
+  if(!session.isMultiplayer) {
+    const first = session.participants.get(session.turn);
+    
+    if(first?.type === "ai") {
+      const attacked = Array.from(session.participants.values()).find(p => p.id !== first.id);
 
-    session.history.push({
-      attacker: "computer",
-      position: coords,
-      result,
-      timestamp: Date.now(),
-    });
+      if(attacked) {
+        const aiInstance = first.instance as Computer;
+        const coords = aiInstance.chooseAttack();
+        const result = attacked.gameboard.receiveAttack(coords);
+        aiInstance.registerOutcome(coords, result);
 
-    // Handle (though very unlikely) edge case where player ships are all sunk after one move
-    if (human.gameboard.allShipsSunk()) session.phase = "ended";
-    else session.turn = "player";
+        session.history.push({
+          attacker: first.id,
+          position: coords,
+          result,
+          timestamp: Date.now(),
+        });
+
+        // Unlikely edge case
+        if (attacked.gameboard.allShipsSunk()) session.phase = "ended";
+        else session.turn = attacked.id;
+      }
+    }
   }
 
   return {
     status: 200,
     data: {
+      success: true,
       gameId: session.id,
       phase: session.phase,
       turn: session.turn,
-      boards: {
-        player: human.gameboard.getSnapshot(),
-        opponent: gameService.getMaskedBoard(ai.gameboard),
-      },
+      gameStarted: true,
     },
   };
 }
