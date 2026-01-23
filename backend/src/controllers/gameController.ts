@@ -22,7 +22,7 @@ export async function getGame(sessionId: string, playerId: string) {
       id === playerId || session.phase === "ended"
         ? p.gameboard.getSnapshot()
         : gameService.getMaskedBoard(p.gameboard),
-    ])
+    ]),
   );
 
   return {
@@ -38,9 +38,13 @@ export async function getGame(sessionId: string, playerId: string) {
   };
 }
 // ------------------- CREATE GAME -------------------
-export async function createGame(sessionId: string, playerId: string, isMultiplayer: boolean) {
+export async function createGame(
+  sessionId: string,
+  playerId: string,
+  isMultiplayer: boolean,
+) {
   const emptyBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
-    Array.from({ length: DEFAULT_BOARD_SIZE }, () => ({ type: "empty" }))
+    Array.from({ length: DEFAULT_BOARD_SIZE }, () => ({ type: "empty" })),
   );
 
   // Create game only if it exists
@@ -55,7 +59,7 @@ export async function createGame(sessionId: string, playerId: string, isMultipla
     // const ai = session.participants.get("computer");
     const human = session.participants.get(playerId);
     const participantIds = Array.from(session.participants.keys());
-    const opponentId = participantIds.find(id => id !== playerId);
+    const opponentId = participantIds.find((id) => id !== playerId);
     const opponent = opponentId ? session.participants.get(opponentId) : null;
 
     return {
@@ -128,7 +132,7 @@ export async function placeShip(
 // ------------------- START GAME -------------------
 export async function startGame(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
-  
+
   if (!session) return { status: 404, data: { error: "Game not found" } };
   if (session.phase !== "setup")
     return { status: 400, data: { error: "Game has already started" } };
@@ -155,15 +159,18 @@ export async function startGame(sessionId: string, playerId: string) {
 
   const player = session.participants.get(playerId);
 
-  if(!player) {
+  if (!player) {
     return { status: 404, data: { error: "Player not found in session" } };
   }
 
   if (player.type !== "human") {
-    return { status: 400, data: { error: "Only human players can start the game" } };
+    return {
+      status: 400,
+      data: { error: "Only human players can start the game" },
+    };
   }
 
-  if(player.gameboard.ships.length == 0) {
+  if (player.gameboard.ships.length == 0) {
     player.instance.randomPopulate();
   } else if (player.gameboard.ships.length < SHIPS.length) {
     return { status: 400, data: { error: "Not all ships have been placed" } };
@@ -174,8 +181,8 @@ export async function startGame(sessionId: string, playerId: string) {
   // In multiplayer, wait for both players to be ready
   if (session.isMultiplayer) {
     const allReady = Array.from(session.participants.values())
-      .filter(p => p.type === "human")
-      .every(p => p.ready);
+      .filter((p) => p.type === "human")
+      .every((p) => p.ready);
 
     if (!allReady) {
       return {
@@ -192,13 +199,15 @@ export async function startGame(sessionId: string, playerId: string) {
   const players = Array.from(session.participants.keys());
   session.turn = players[Math.floor(Math.random() * players.length)];
 
-  if(!session.isMultiplayer) {
+  if (!session.isMultiplayer) {
     const first = session.participants.get(session.turn);
-    
-    if(first?.type === "ai") {
-      const attacked = Array.from(session.participants.values()).find(p => p.id !== first.id);
 
-      if(attacked) {
+    if (first?.type === "ai") {
+      const attacked = Array.from(session.participants.values()).find(
+        (p) => p.id !== first.id,
+      );
+
+      if (attacked) {
         const aiInstance = first.instance as Computer;
         const coords = aiInstance.chooseAttack();
         const result = attacked.gameboard.receiveAttack(coords);
@@ -233,95 +242,94 @@ export async function startGame(sessionId: string, playerId: string) {
 // ------------------- ATTACK -------------------
 export async function attack(
   sessionId: string,
+  attackerId: string,
   body: { x: number; y: number },
 ) {
-  const { x, y } = body;
   const session = gameService.getSession(sessionId);
   if (!session) return { status: 404, data: { error: "Game not found" } };
+
   if (session.phase !== "playing")
     return { status: 400, data: { error: "Game is not in playing phase" } };
-  if (session.turn !== "player")
+
+  const attacker = session.participants.get(attackerId);
+  if (!attacker) return { status: 404, data: { error: "Attacker not found" } };
+
+  if (session.turn !== attackerId)
     return { status: 400, data: { error: "It is not your turn" } };
 
-  const human = session.participants.get("player");
-  const ai = session.participants.get("computer");
-  if (!human || !ai)
-    return { status: 500, data: { error: "Participants not found" } };
+  const attacked = Array.from(session.participants.values()).find(
+    (p) => p.id !== attackerId,
+  );
 
-  // Player attacks AI
-  const playerAttack = ai.gameboard.receiveAttack({ x, y });
+  if (!attacked)
+    return { status: 500, data: { error: "No opponent found to attack" } };
+
+  const playerAttack = attacked.gameboard.receiveAttack(body);
+
   if (playerAttack.outcome === Outcome.UNAVAILABLE)
     return { status: 400, data: { error: "Invalid move" } };
 
   session.history.push({
-    attacker: "player",
-    position: { x, y },
+    attacker: attackerId,
+    position: { x: body.x, y: body.y },
     result: playerAttack,
     timestamp: Date.now(),
   });
 
-  // Check if AI lost
-  if (ai.gameboard.allShipsSunk()) {
-    session.phase = "ended";
-    return {
-      status: 200,
-      data: {
-        playerAttack,
-        aiAttack: null,
-        boards: {
-          player: human.gameboard.getSnapshot(),
-          opponent: gameService.getMaskedBoard(ai.gameboard),
-        },
-        phase: session.phase,
-        history: session.history,
-      },
-    };
-  }
+  let aiAttack = null;
 
-  // AI counterattacks
-  const aiInstance = ai.instance as Computer;
-  const aiCoords = aiInstance.chooseAttack();
-  const aiAttack = human.gameboard.receiveAttack(aiCoords);
-  aiInstance.registerOutcome(aiCoords, aiAttack);
+  if (!session.isMultiplayer && attacked.type === "ai") {
+    // AI counterattacks
+    const aiInstance = attacked.instance as Computer;
+    const coords = aiInstance.chooseAttack();
+    aiAttack = attacker.gameboard.receiveAttack(coords);
+    aiInstance.registerOutcome(coords, aiAttack);
 
-  session.history.push({
-    attacker: "computer",
-    position: aiCoords,
-    result: aiAttack,
-    timestamp: Date.now(),
-  });
+    session.history.push({
+      attacker: attacked.id,
+      position: coords,
+      result: aiAttack,
+      timestamp: Date.now(),
+    });
 
-  // Check if player lost, otherwise transition to player turn
-  if (human.gameboard.allShipsSunk()) {
-    session.phase = "ended";
-    return {
-      status: 200,
-      data: {
-        playerAttack,
-        aiAttack,
-        boards: {
-          player: human.gameboard.getSnapshot(),
-          // Reveal enemy gameboard if player loses
-          opponent: ai.gameboard.getSnapshot(), 
-        },
-        phase: session.phase,
-        history: session.history,
-      },
-    };
+    // Check if player lost after AI counterattack
+    if (attacker.gameboard.allShipsSunk()) {
+      session.phase = "ended";
+      session.turn = "";
+    } else {
+      // Player still alive, turn goes back to player
+      session.turn = attackerId;
+    }
   } else {
-    session.turn = "player";
+    const nextPlayer = Array.from(session.participants.values()).find(
+      (p) => p.id !== attackerId,
+    );
+
+    session.turn = nextPlayer ? nextPlayer.id : "";
   }
+
+  if (attacked.gameboard.allShipsSunk()) {
+    session.phase = "ended";
+    session.turn = "";
+  }
+
+  const boards = Object.fromEntries(
+    Array.from(session.participants.entries()).map(([id, p]) => [
+      id,
+      session.phase === "ended"
+        ? p.gameboard.getSnapshot()
+        : gameService.getMaskedBoard(p.gameboard),
+    ]),
+  );
 
   return {
     status: 200,
     data: {
       playerAttack,
       aiAttack,
-      boards: {
-        player: human.gameboard.getSnapshot(),
-        opponent: gameService.getMaskedBoard(ai.gameboard),
-      },
+      boards,
       phase: session.phase,
+      turn: session.turn,
       history: session.history,
     },
   };
