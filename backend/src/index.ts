@@ -135,6 +135,21 @@ io.on("connection", (socket) => {
       socket.to(gameId).emit("playerMarkedReady", { playerId });
     }
   });
+
+  socket.on("clearShips", async ({ gameId, playerId }) => {
+    const result = await gameController.clearShips(gameId, playerId);
+    
+    if (result.status !== 200) {
+      socket.emit("error", { message: result.data.error });
+      return;
+    }
+
+    socket.emit("shipsCleared", result.data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
 });
 
 // Handle all game routes
