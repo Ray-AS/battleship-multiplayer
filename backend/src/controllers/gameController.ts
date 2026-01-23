@@ -38,8 +38,7 @@ export async function getGame(sessionId: string, playerId: string) {
   };
 }
 // ------------------- CREATE GAME -------------------
-export async function createGame(sessionId: string) {
-  const playerId = "player";
+export async function createGame(sessionId: string, playerId: string, isMultiplayer: boolean) {
   const emptyBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
     Array.from({ length: DEFAULT_BOARD_SIZE }, () => ({ type: "empty" }))
   );
@@ -52,8 +51,12 @@ export async function createGame(sessionId: string) {
       session = gameService.createGame(sessionId, playerId);
     }
 
+    // const human = session.participants.get(playerId);
+    // const ai = session.participants.get("computer");
     const human = session.participants.get(playerId);
-    const ai = session.participants.get("computer");
+    const participantIds = Array.from(session.participants.keys());
+    const opponentId = participantIds.find(id => id !== playerId);
+    const opponent = opponentId ? session.participants.get(opponentId) : null;
 
     return {
       status: 200,
@@ -61,9 +64,11 @@ export async function createGame(sessionId: string) {
         gameId: sessionId,
         phase: session.phase,
         playerBoard: human?.gameboard.getSnapshot() || emptyBoard,
-        opponentBoard: ai
-          ? gameService.getMaskedBoard(ai.gameboard)
+        opponentBoard: opponent
+          ? gameService.getMaskedBoard(opponent.gameboard)
           : emptyBoard,
+        isMultiplayer: session.isMultiplayer,
+        participantCount: session.participants.size,
       },
     };
   } catch {
