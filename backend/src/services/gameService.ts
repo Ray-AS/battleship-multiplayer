@@ -25,23 +25,19 @@ interface GameSession {
 class GameService {
   private sessions = new Map<string, GameSession>();
 
-  createGame(gameId: string, playerId = "player") {
+  createGame(gameId: string, playerId = "player", isMultiplayer = false) {
     if (this.sessions.has(gameId)) {
       throw new Error("Game already exists");
     }
 
     const human = new Player();
-    const computer = new Computer();
-
-    // Setup initial AI state
-    computer.randomPopulate();
-    computer.resetAI();
 
     const session: GameSession = {
       id: gameId,
       phase: "setup",
       turn: playerId,
       history: [],
+      isMultiplayer,
       participants: new Map([
         [
           playerId,
@@ -50,19 +46,27 @@ class GameService {
             type: "human",
             gameboard: human.gameboard,
             instance: human,
-          },
-        ],
-        [
-          "computer",
-          {
-            id: "computer",
-            type: "ai",
-            gameboard: computer.gameboard,
-            instance: computer,
+            ready: false,
           },
         ],
       ]),
     };
+
+    if(!isMultiplayer) {
+      const computer = new Computer();
+
+      // Setup initial AI state
+      computer.randomPopulate();
+      computer.resetAI();
+
+      session.participants.set("computer", {
+        id: "computer",
+        type: "ai",
+        gameboard: computer.gameboard,
+        instance: computer,
+        ready: true, // AI is always ready
+      });
+    }
 
     this.sessions.set(gameId, session);
     return session;
