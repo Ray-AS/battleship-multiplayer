@@ -5,7 +5,14 @@ import { placeShipSchema, attackSchema } from "../schemas/gameSchemas.ts";
 export async function gameRoutes(fastify: FastifyInstance) {
   fastify.get("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { status, data } = await gameController.getGame(id);
+    const { playerId } = request.query as { playerId?: string };
+    
+    if (!playerId) {
+      return reply.status(400).send({ error: "playerId query parameter required" });
+
+    }
+      
+    const { status, data } = await gameController.getGame(id, playerId);
     return reply.status(status).send(data);
   });
 
