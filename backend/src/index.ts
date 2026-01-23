@@ -81,6 +81,37 @@ io.on("connection", (socket) => {
     socket.to(gameId).emit("playerJoined", { playerId });
   });
 
+  socket.on("startGame", async ({ gameId, playerId }) => {
+    console.log("startGame socket event received:", { gameId, playerId });
+
+    const result = await gameController.startGame(gameId, playerId);
+
+    if (result.status !== 200) {
+      socket.emit("error", { message: result.data.error });
+      return;
+    }
+
+    if (result.data.gameStarted) {
+      // Notify all players that the game has started and send tailored state
+      const session = gameService.getSession(gameId);
+      if (session) {
+        for (const playerId of session.participants.keys()) {
+          const gameState = await gameController.getGame(gameId, playerId);
+          io.to(gameId).emit("gameState", {
+            ...gameState.data,
+            forPlayerId: playerId,
+          });
+        }
+      }
+    } else {
+      // Player marked ready but wait for other player
+      socket.emit("playerReady", { message: result.data.message });
+
+      // Notify others that this player is ready
+      socket.to(gameId).emit("playerMarkedReady", { playerId });
+    }
+  });
+
   socket.on("attack", async ({ gameId, attackerId, x, y }) => {
     const result = await gameController.attack(gameId, attackerId, { x, y });
 
@@ -102,43 +133,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("startGame", async ({ gameId, playerId }) => {
-    console.log("startGame socket event received:", { gameId, playerId });
-
-    const result = await gameController.startGame(gameId, playerId);
-
-    if (result.status !== 200) {
-      socket.emit("error", { message: result.data.error });
-      return;
-    }
-
-    if (result.data.gameStarted) {
-      // Notify all players that the game has started and send tailored state
-      const session = gameService.getSession(gameId);
-      if (session) {
-        for (const playerId of session.participants.keys()) {
-          const gameState = await gameController.getGame(
-            gameId,
-            playerId,
-          );
-          io.to(gameId).emit("gameState", {
-            ...gameState.data,
-            forPlayerId: playerId,
-          });
-        }
-      }
-    } else {
-      // Player marked ready but wait for other player
-      socket.emit("playerReady", { message: result.data.message });
-
-      // Notify others that this player is ready
-      socket.to(gameId).emit("playerMarkedReady", { playerId });
-    }
-  });
-
   socket.on("clearShips", async ({ gameId, playerId }) => {
     const result = await gameController.clearShips(gameId, playerId);
-    
+
     if (result.status !== 200) {
       socket.emit("error", { message: result.data.error });
       return;

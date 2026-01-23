@@ -6,10 +6,11 @@ export async function gameRoutes(fastify: FastifyInstance) {
   fastify.get("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
     const { playerId } = request.query as { playerId?: string };
-    
-    if (!playerId) {
-      return reply.status(400).send({ error: "playerId query parameter required" });
 
+    if (!playerId) {
+      return reply
+        .status(400)
+        .send({ error: "playerId query parameter required" });
     }
 
     const { status, data } = await gameController.getGame(id, playerId);
@@ -18,8 +19,15 @@ export async function gameRoutes(fastify: FastifyInstance) {
 
   fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { playerId, isMultiplayer } = request.body as { playerId: string; isMultiplayer: boolean };
-    const { status, data } = await gameController.createGame(id, playerId, isMultiplayer);
+    const { playerId, isMultiplayer } = request.body as {
+      playerId: string;
+      isMultiplayer: boolean;
+    };
+    const { status, data } = await gameController.createGame(
+      id,
+      playerId,
+      isMultiplayer,
+    );
     return reply.status(status).send(data);
   });
 
@@ -39,11 +47,11 @@ export async function gameRoutes(fastify: FastifyInstance) {
   fastify.post("/:id/start", async (request, reply) => {
     const { id } = request.params as { id: string };
     const { playerId } = request.body as { playerId?: string };
-    
+
     if (!playerId) {
       return reply.status(400).send({ error: "playerId is required" });
     }
-    
+
     const { status, data } = await gameController.startGame(id, playerId);
     return reply.status(status).send(data);
   });

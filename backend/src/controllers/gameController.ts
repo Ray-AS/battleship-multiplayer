@@ -53,11 +53,9 @@ export async function createGame(
     let session = gameService.getSession(sessionId);
 
     if (!session) {
-      session = gameService.createGame(sessionId, playerId);
+      session = gameService.createGame(sessionId, playerId, isMultiplayer);
     }
-
-    // const human = session.participants.get(playerId);
-    // const ai = session.participants.get("computer");
+    
     const human = session.participants.get(playerId);
     const participantIds = Array.from(session.participants.keys());
     const opponentId = participantIds.find((id) => id !== playerId);
@@ -337,19 +335,19 @@ export async function attack(
 }
 
 // ------------------- JOIN GAME -------------------
-export async function joinGame(
-  sessionId: string,
-  playerId: string,
-) {
+export async function joinGame(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
   if (!session) return { status: 404, data: { error: "Game not found" } };
 
-  if(!session.isMultiplayer) {
+  if (!session.isMultiplayer) {
     return { status: 400, data: { error: "Cannot join a singleplayer game" } };
   }
 
   if (session.participants.has(playerId)) {
-    return { status: 400, data: { error: "Player ID already taken in this game" } };
+    return {
+      status: 400,
+      data: { error: "Player ID already taken in this game" },
+    };
   }
 
   if (session.participants.size >= 2) {
@@ -377,10 +375,7 @@ export async function joinGame(
 }
 
 // ------------------- CLEAR SHIPS -------------------
-export async function clearShips(
-  sessionId: string,
-  playerId: string,
-) {
+export async function clearShips(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
   if (!session) return { status: 404, data: { error: "Game not found" } };
 
