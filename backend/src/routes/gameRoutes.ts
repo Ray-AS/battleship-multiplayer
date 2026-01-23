@@ -11,6 +11,7 @@ export async function gameRoutes(fastify: FastifyInstance) {
 
   fastify.post("/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
+    const { playerId, isMultiplayer } = request.body as { playerId: string; isMultiplayer: boolean };
     const { status, data } = await gameController.createGame(id);
     return reply.status(status).send(data);
   });

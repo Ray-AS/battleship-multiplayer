@@ -5,14 +5,25 @@ import type { Orientation } from "../models.ts";
 import type { Computer } from "../utils/computer.ts";
 
 // ------------------- GET GAME -------------------
-export async function getGame(sessionId: string) {
+export async function getGame(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
   if (!session) return { status: 404, data: { error: "Game not found" } };
 
-  const human = session.participants.get("player");
-  const ai = session.participants.get("computer");
-  if (!human || !ai)
-    return { status: 500, data: { error: "Participants not found" } };
+  // const human = session.participants.get("player");
+  // const ai = session.participants.get("computer");
+  // if (!human || !ai)
+  //   return { status: 500, data: { error: "Participants not found" } };
+
+  // Prepare board snapshots
+  const boards = Object.fromEntries(
+    Array.from(session.participants.entries()).map(([id, p]) => [
+      id,
+      // Only reveal full board to the player themselves or if the game has ended
+      id === playerId || session.phase === "ended"
+        ? p.gameboard.getSnapshot()
+        : gameService.getMaskedBoard(p.gameboard),
+    ])
+  );
 
   return {
     status: 200,
@@ -20,14 +31,12 @@ export async function getGame(sessionId: string) {
       gameId: session.id,
       phase: session.phase,
       turn: session.turn,
-      boards: {
-        player: human.gameboard.getSnapshot(),
-        opponent: gameService.getMaskedBoard(ai.gameboard),
-      },
+      boards,
+      isMultiplayer: session.isMultiplayer,
+      participantCount: session.participants.size,
     },
   };
 }
-
 // ------------------- CREATE GAME -------------------
 export async function createGame(sessionId: string) {
   const playerId = "player";
