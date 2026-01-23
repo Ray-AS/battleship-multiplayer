@@ -53,9 +53,11 @@ export async function gameRoutes(fastify: FastifyInstance) {
     { schema: attackSchema },
     async (request, reply) => {
       const { id } = request.params as { id: string };
+      const body = request.body as { attackerId: string; x: number; y: number };
       const { status, data } = await gameController.attack(
         id,
-        request.body as any,
+        body.attackerId,
+        { x: body.x, y: body.y },
       );
       return reply.status(status).send(data);
     },
