@@ -53,7 +53,7 @@ export interface ShipModel {
 export type SimulationBoard = boolean[][];
 
 export interface Move {
-  attacker: "player" | "computer";
+  attacker: string;
   position: Position;
   result: AttackOutcome;
   timestamp: number;
