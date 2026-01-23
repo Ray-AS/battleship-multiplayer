@@ -81,7 +81,30 @@ io.on("connection", (socket) => {
 
     socket.to(gameId).emit("playerJoined", { playerId });
   });
+
+  socket.on("attack", async ({ gameId, attackerId, x, y }) => {
+    const result = await gameController.attack(gameId, attackerId, { x, y });
+    
+    if (result.status !== 200) {
+      socket.emit("error", { message: result.data.error });
+      return;
+    }
+
+    // Send tailored state to each player
+    const session = gameService.getSession(gameId);
+    if (session) {
+      for (const playerId of session.participants.keys()) {
+        const gameState = await gameController.getGame(gameId, playerId);
+        io.to(gameId).emit("gameState", {
+          ...gameState.data,
+          forPlayerId: playerId
+        });
+      }
+    }
+  });
 });
+
+
 
 
 // Handle all game routes
