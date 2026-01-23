@@ -1,5 +1,5 @@
 import Fastify from "fastify";
-import cors from '@fastify/cors';
+import cors from "@fastify/cors";
 
 import { Server as HTTPServer } from "http";
 import { Server as IOServer } from "socket.io";
@@ -17,17 +17,16 @@ const server: HTTPServer = fastify.server;
 const io = new IOServer(server, {
   cors: {
     origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-  }
+  },
 });
 
-fastify.decorate('io', io);
+fastify.decorate("io", io);
 
-await fastify.register(cors, { 
+await fastify.register(cors, {
   origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'] 
+  methods: ["GET", "POST", "PUT", "DELETE"],
 });
 await fastify.register(swaggerPlugin);
-
 
 fastify.get("/", async () => {
   // Return basic data about api on root request
@@ -53,15 +52,15 @@ io.on("connection", (socket) => {
       return;
     }
 
-    console.log("joinGame socket event:", { 
-      gameId, 
-      playerId, 
+    console.log("joinGame socket event:", {
+      gameId,
+      playerId,
       participantIds: Array.from(session.participants.keys()),
-      hasPlayer: session.participants.has(playerId)
+      hasPlayer: session.participants.has(playerId),
     });
 
-    if(!session.participants.has(playerId)) {
-      if(session.isMultiplayer && session.participants.size < 2) {
+    if (!session.participants.has(playerId)) {
+      if (session.isMultiplayer && session.participants.size < 2) {
         const result = await gameController.joinGame(gameId, playerId);
         if (result.status !== 200) {
           socket.emit("error", { message: result.data.error });
@@ -84,7 +83,7 @@ io.on("connection", (socket) => {
 
   socket.on("attack", async ({ gameId, attackerId, x, y }) => {
     const result = await gameController.attack(gameId, attackerId, { x, y });
-    
+
     if (result.status !== 200) {
       socket.emit("error", { message: result.data.error });
       return;
@@ -97,15 +96,46 @@ io.on("connection", (socket) => {
         const gameState = await gameController.getGame(gameId, playerId);
         io.to(gameId).emit("gameState", {
           ...gameState.data,
-          forPlayerId: playerId
+          forPlayerId: playerId,
         });
       }
     }
   });
+
+  socket.on("startGame", async ({ gameId, playerId }) => {
+    console.log("startGame socket event received:", { gameId, playerId });
+
+    const result = await gameController.startGame(gameId, playerId);
+
+    if (result.status !== 200) {
+      socket.emit("error", { message: result.data.error });
+      return;
+    }
+
+    if (result.data.gameStarted) {
+      // Notify all players that the game has started and send tailored state
+      const session = gameService.getSession(gameId);
+      if (session) {
+        for (const playerId of session.participants.keys()) {
+          const gameState = await gameController.getGame(
+            gameId,
+            playerId,
+          );
+          io.to(gameId).emit("gameState", {
+            ...gameState.data,
+            forPlayerId: playerId,
+          });
+        }
+      }
+    } else {
+      // Player marked ready but wait for other player
+      socket.emit("playerReady", { message: result.data.message });
+
+      // Notify others that this player is ready
+      socket.to(gameId).emit("playerMarkedReady", { playerId });
+    }
+  });
 });
-
-
-
 
 // Handle all game routes
 fastify.register(gameRoutes, { prefix: "/game" });
