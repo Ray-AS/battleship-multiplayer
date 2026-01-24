@@ -1,9 +1,9 @@
-import type { AttackResponse, Board, PlaceShipRequest } from "./models";
+import type { ApiError, AttackResponse, CreateGameResponse, PlaceShipRequest, PlaceShipResponse } from "./models";
 
 const API_URL = "http://localhost:3000/game";
 
 export const api = {
-  createGame: (gameId: string, playerId: string, isMultiplayer: boolean) =>
+  createGame: (gameId: string, playerId: string, isMultiplayer: boolean): Promise<CreateGameResponse | ApiError> =>
     fetch(`${API_URL}/${gameId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -13,7 +13,7 @@ export const api = {
   placeShip: (
     id: string,
     body: PlaceShipRequest,
-  ): Promise<{ board?: Board; error?: string }> =>
+  ): Promise<PlaceShipResponse | ApiError> =>
     fetch(`${API_URL}/${id}/place`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

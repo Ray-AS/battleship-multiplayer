@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import type { Board as BoardT, PlayerType } from "../models";
+import type { Board as BoardT, GetGameResponse, PlayerType } from "../models";
 import { createEmptyBoard } from "../utils/helpers";
 
 export function useBoardUpdates() {
@@ -15,7 +15,7 @@ export function useBoardUpdates() {
   const [pendingWinner, setPendingWinner] = useState<PlayerType | null>(null);
   const hasAttackedRef = useRef(false);
 
-  const shouldDelayUpdate = (data: any) => {
+  function shouldDelayUpdate(data: GetGameResponse): boolean {
     return (
       !data.isMultiplayer &&
       delayRef.current > 0 &&

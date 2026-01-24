@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { socket } from "../socket";
 import { calculateWinner } from "../utils/helpers";
-import type { Board, GameState, PlayerType } from "../models";
+import type { Board, GameState, GetGameResponse, PlayerType } from "../models";
 
 interface useSocketParams {
   MY_ID: string;
@@ -15,7 +15,7 @@ interface useSocketParams {
   pendingOpponentBoardRef: React.RefObject<Board | null>;
   setPendingWinner: React.Dispatch<React.SetStateAction<PlayerType | null>>;
   delayRef: React.RefObject<number>;
-  shouldDelayUpdate: (data: any) => boolean;
+  shouldDelayUpdate: (data: GetGameResponse) => boolean;
 }
 
 export function useSocket({

@@ -98,3 +98,90 @@ export interface GameState {
   myTurn: boolean;
   imReady: boolean;
 }
+
+/* RESPONSE TYPES FROM BACKEND */
+export interface ApiError {
+  error: string;
+}
+
+export interface GetGameResponse {
+  gameId: string;
+  phase: GamePhase;
+  turn: string;
+  boards: Record<string, Board>;
+  isMultiplayer: boolean;
+  participantCount: number;
+  forPlayerId?: string;
+}
+
+export interface CreateGameResponse {
+  gameId: string;
+  phase: GamePhase;
+  playerBoard: Board;
+  opponentBoard: Board;
+  isMultiplayer: boolean;
+  participantCount: number;
+}
+
+export interface PlaceShipResponse {
+  success: true;
+  board: Board;
+}
+
+export interface StartGameResponseReady {
+  success: true;
+  message: string;
+  ready: true;
+}
+
+export interface StartGameResponseStarted {
+  success: true;
+  gameId: string;
+  phase: GamePhase;
+  turn: string;
+  gameStarted: true;
+}
+
+export type StartGameResponse = StartGameResponseReady | StartGameResponseStarted;
+
+// export interface AttackResponse {
+//   playerAttack: AttackResult;
+//   aiAttack: AttackResult | null;
+//   boards: Record<string, Board>;
+//   phase: GamePhase;
+//   turn: string;
+//   history: Move[];
+// }
+
+export interface JoinGameResponse {
+  gameId: string;
+  phase: GamePhase;
+  playerBoard: Board;
+}
+
+export interface ClearShipsResponse {
+  success: true;
+  board: Board;
+}
+
+export interface PlayerJoinedEvent {
+  playerId: string;
+  participantCount: number;
+}
+
+export interface PlayerReadyEvent {
+  message: string;
+}
+
+export interface PlayerMarkedReadyEvent {
+  playerId: string;
+}
+
+export interface ErrorEvent {
+  message: string;
+}
+
+export interface ShipsClearedEvent {
+  success: true;
+  board: Board;
+}
