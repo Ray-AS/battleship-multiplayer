@@ -47,8 +47,11 @@ function App() {
   const [myTurn, setMyTurn] = useState(false);
 
   const [delay, setDelay] = useState(1);
-  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] =
-    useState<BoardT | null>(null);
+  const delayRef = useRef(1)
+  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] = useState(null);
+  const pendingPlayerBoardRef = useRef(null);
+  const pendingOpponentBoardRef = useRef<BoardT | null>(null);
+  const [pendingWinner, setPendingWinner] = useState<PlayerType | null>(null);
   const hasAttackedRef = useRef(false);
   // const [readyStatus, setReadyStatus] = useState<string>("");
   const [imReady, setImReady] = useState(false);
@@ -92,20 +95,31 @@ function App() {
       const opponentId = participantIds.find((id) => id !== MY_ID);
       const opponentBoardData = opponentId ? data.boards[opponentId] : null;
 
-      // No delay on showing my attacks
+      // Only apply delay if:
+      // 1. Single-player mode
+      // 2. Delay is set
+      // 3. Game is in playing phase OR just ended (AI's winning move)
+      // 4. I have made at least one attack (not the initial board state)
+      // 5. No pending update already
+      const shouldDelay =
+        !data.isMultiplayer &&
+        delayRef.current > 0 &&
+        (data.phase === "playing" || data.phase === "ended") &&
+        hasAttackedRef.current &&
+        pendingPlayerBoardRef.current === null;
+
       if (opponentBoardData) {
-        setOpponentBoard(opponentBoardData);
+        // If game ended and delaying updates, also delay opponent board reveal
+        if (data.phase === "ended" && shouldDelay) {
+          pendingOpponentBoardRef.current = opponentBoardData;
+        } else {
+          // Update opponent board immediately for normal attacks
+          setOpponentBoard(opponentBoardData);
+          pendingOpponentBoardRef.current = null;
+        }
       }
 
       if (myBoardData) {
-        // Detect if this is an AI counterattack (single-player only)
-        const shouldDelay =
-          !data.isMultiplayer &&
-          delay > 0 &&
-          data.phase === "playing" &&
-          hasAttackedRef.current &&
-          pendingPlayerBoardUpdate === null;
-
         if (shouldDelay) {
           // Clear any existing timeout
           if (delayTimeout) {
@@ -115,11 +129,37 @@ function App() {
           // Show my attack immediately (opponent board already updated)
           // Delay showing AI's attack on my board
           setPendingPlayerBoardUpdate(myBoardData);
+          pendingPlayerBoardRef.current = myBoardData;
+
+          // Also delay winner reveal if game ended
+          if (data.phase === "ended") {
+            const myShipsRemaining = myBoardData
+              ?.flat()
+              .some((cell: CellT) => cell.type === "ship");
+            setPendingWinner(myShipsRemaining ? "Player" : "Computer");
+          }
+
           delayTimeout = window.setTimeout(() => {
             setPlayerBoard(myBoardData);
             setPendingPlayerBoardUpdate(null);
+            pendingPlayerBoardRef.current = null;
+
+            if (pendingOpponentBoardRef.current) {
+              setOpponentBoard(pendingOpponentBoardRef.current);
+              pendingOpponentBoardRef.current = null;
+            }
+
+            // Set winner after delay if game ended
+            if (data.phase === "ended") {
+              const myShipsRemaining = myBoardData
+                ?.flat()
+                .some((cell: CellT) => cell.type === "ship");
+              setWinner(myShipsRemaining ? "Player" : "Computer");
+              setPendingWinner(null);
+            }
+
             delayTimeout = null;
-          }, delay * 1000);
+          }, delayRef.current * 1000);
         } else {
           // No delay needed (game setup, game end, multiplayer, or already pending)
           setPlayerBoard(myBoardData);
@@ -130,15 +170,18 @@ function App() {
             delayTimeout = null;
           }
           setPendingPlayerBoardUpdate(null);
+          pendingPlayerBoardRef.current = null;
+
+          if (data.phase === "ended") {
+            const myShipsRemaining = myBoardData
+              ?.flat()
+              .some((cell: CellT) => cell.type === "ship");
+            setWinner(myShipsRemaining ? "Player" : "Computer");
+            setPendingWinner(null);
+          }
         }
       }
 
-      if (data.phase === "ended") {
-        const myShipsRemaining = myBoardData
-          ?.flat()
-          .some((cell: CellT) => cell.type === "ship");
-        setWinner(myShipsRemaining ? "Player" : "Computer");
-      }
     });
 
     socket.on("playerJoined", (data) => {
@@ -287,8 +330,10 @@ function App() {
     setOpponentBoard(createEmptyBoard());
     setImReady(false);
     setPendingPlayerBoardUpdate(null);
+    setPendingWinner(null);
     setJoinMode(false);
     setJoinId("");
+    pendingPlayerBoardRef.current = null;
     hasAttackedRef.current = false;
   }
 
@@ -391,7 +436,7 @@ function App() {
                 )}
               </div>
             )}
-            {phase === "playing" && (
+            {(phase === "playing" || (phase === "ended" && pendingWinner)) && (
               <>
                 {!isMultiplayer && (
                   <div className={"settings"}>
@@ -408,6 +453,7 @@ function App() {
                           if (val < 0) val = 0;
                           if (val > 5) val = 5;
                           setDelay(val);
+                          delayRef.current = val;
                         }}
                       />
                     </label>
@@ -424,7 +470,7 @@ function App() {
                 </div>
               </>
             )}
-            {phase === "ended" && (
+            {(phase === "ended" && !pendingWinner) && (
               <div className="game-over">
                 <h3>{winner === "Player" ? "VICTORY!" : "DEFEAT!"}</h3>
                 <button onClick={resetGame}>New Game</button>
