@@ -2,6 +2,8 @@
 
 A modern, full-stack implementation of the classic Battleship game with both single-player (vs AI) and multiplayer modes.
 
+![Creating and joining multiplayer game and making three moves](assets/example.gif)
+
 ## Features
 
 - **Singleplayer Mode**: Play against a smart AI opponent with probabilistic attack strategy using heatmaps and simulation
