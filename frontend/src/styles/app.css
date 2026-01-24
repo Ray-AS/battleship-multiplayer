@@ -150,3 +150,66 @@ header button:enabled:active,
   border-color: #212121;
   box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.6);
 }
+
+.error-banner {
+  position: fixed;
+  top: 20px;
+  left: 10%;
+  transform: translateX(-50%);
+  background-color: #ff4d4d;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.4);
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
+}
+
+.ready-banner {
+  position: fixed;
+  top: 20px;
+  left: 10%;
+  transform: translateX(-50%);
+  background-color: #1eff00;
+  color: #131313;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 255, 42, 0.4);
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateX(-50%) translateY(-100px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.status-bar {
+  margin-top: 10px;
+}
+
+.lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lobby-controls button {
+  text-align: center;
+}

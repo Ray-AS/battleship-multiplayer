@@ -9,7 +9,6 @@ import type {
   Board as BoardT,
   Cell as CellT,
 } from "./models.ts";
-// import { PlayerContext } from "./components/PlayerContext";
 import { api } from "./api.ts";
 import { v4 as uuidv4 } from "uuid";
 import { SHIPS } from "./configs.ts";
@@ -43,11 +42,15 @@ function App() {
     imReady: false,
   });
 
+  // Keep track of data related to player's ship placement during setup
+  const [placement, setPlacement] = useState<PlacementState | null>(null);
+
+  // Keep track of player and opponent boards
   const [playerBoard, setPlayerBoard] = useState<BoardT>(createEmptyBoard());
   const [opponentBoard, setOpponentBoard] =
     useState<BoardT>(createEmptyBoard());
-  const [placement, setPlacement] = useState<PlacementState | null>(null);
 
+  // Keep track of pending data & delays to update interface at correct moments
   const [delay, setDelay] = useState(1);
   const delayRef = useRef(1);
   const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] =
@@ -56,7 +59,9 @@ function App() {
   const pendingOpponentBoardRef = useRef<BoardT | null>(null);
   const [pendingWinner, setPendingWinner] = useState<PlayerType | null>(null);
   const hasAttackedRef = useRef(false);
-  // const [readyStatus, setReadyStatus] = useState<string>("");
+
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [readyStatus, setReadyStatus] = useState<string>("");
 
   const [joinMode, setJoinMode] = useState(false);
   const [joinId, setJoinId] = useState("");
@@ -123,7 +128,7 @@ function App() {
       }
 
       if (data.phase === "playing") {
-        // setReadyStatus("");
+        setReadyStatus("");
         setGameState((prev) => ({
           ...prev,
           imReady: false,
@@ -218,20 +223,22 @@ function App() {
     });
 
     socket.on("playerReady", () => {
-      // setReadyStatus(data.message);
+      setReadyStatus("Waiting for others...");
       setGameState((prev) => ({
         ...prev,
         imReady: true,
       }));
     });
 
-    // socket.on("playerMarkedReady", (data) => {
-    //   setReadyStatus(`${data.playerId.slice(0, 8)} is ready!`);
-    //   setTimeout(() => setReadyStatus(""), 3000);
-    // });
+    socket.on("playerMarkedReady", (data) => {
+      setReadyStatus(`${data.playerId.slice(0, 4)} is ready!`);
+      setTimeout(() => setReadyStatus(""), 3000);
+    });
 
     socket.on("error", (data) => {
       console.log(data.message);
+      setErrorMsg(data.message);
+      setTimeout(() => setErrorMsg(""), 3000);
     });
 
     return () => {
@@ -259,7 +266,7 @@ function App() {
     console.log("createGame response:", res);
 
     if (res.error && res.error !== "Game already exists") {
-      alert(res.error);
+      setErrorMsg(res.error);
       return;
     }
 
@@ -275,7 +282,7 @@ function App() {
 
   async function joinExistingGame() {
     if (!joinId.trim()) {
-      console.error("Please enter a Game ID");
+      setErrorMsg("Please enter a Game ID");
       return;
     }
 
@@ -291,7 +298,7 @@ function App() {
     console.log("joinGame response:", res);
 
     if (res.error && res.error !== "Game already exists") {
-      console.log(res.error);
+      setErrorMsg(res.error);
       return;
     }
 
@@ -329,7 +336,7 @@ function App() {
           setPlacement(null);
         }
       } else {
-        console.log(res.error || "Invalid Placement");
+        setErrorMsg(res.error || "Invalid Placement");
       }
     } else if (gameState.phase === "playing" && gameState.myTurn) {
       hasAttackedRef.current = true;
@@ -388,6 +395,13 @@ function App() {
 
   return (
     <>
+      {errorMsg && (
+        <div className="error-banner">{errorMsg}</div>
+      )}
+      
+      {readyStatus && (
+        <div className="ready-banner">{readyStatus}</div>
+      )}
       {!gameState.id ? (
         <div className="lobby">
           <h1>Battleship</h1>
@@ -429,7 +443,7 @@ function App() {
             {gameState.isMultiplayer && (
               <div className="game-id-badge">
                 Room: {gameState.id}
-                {` (${gameState.participantCount === undefined ? 1 : gameState.participantCount}/2 players)`}
+                {` (${gameState.participantCount === undefined ? 2 : gameState.participantCount}/2 players)`}
               </div>
             )}
             {gameState.phase === "setup" && (
