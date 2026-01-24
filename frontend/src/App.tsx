@@ -204,6 +204,30 @@ function App() {
     }
   }
 
+  function handleStartGame() {
+    console.log("Starting game via socket");
+    console.log("MY_ID:", MY_ID);
+    console.log("gameId:", gameId);
+    socket.emit("startGame", { gameId, playerId: MY_ID });
+  }
+
+  function handlePlaceManually() {
+    // Clear existing ships before starting new placement
+    if (playerBoard.flat().some(cell => cell.type === "ship")) {
+      socket.emit("clearShips", { gameId, playerId: MY_ID });
+      
+      // Listen for clear confirmation
+      socket.once("shipsCleared", (data) => {
+        if (data.board) {
+          setPlayerBoard(data.board);
+        }
+        setPlacement({ index: 0, orientation: "horizontal" });
+      });
+    } else {
+      setPlacement({ index: 0, orientation: "horizontal" });
+    }
+  }
+
   // useEffect(() => {
   //   let isMounted = true;
 
@@ -319,24 +343,37 @@ function App() {
 
   return (
     <>
-      { !gameId ? (
+      {!gameId ? (
         <div className="lobby">
           <h1>Battleship</h1>
           <div className="lobby-controls">
-            <button onClick={() => console.log("Playing vs AI")}>Play Vs. Computer</button>
-            <button onClick={() => console.log("Playing vs Friend")}>Play Vs. Friend</button>
+            <button onClick={() => joinGameRoom(false)}>Play Vs. Computer</button>
+            <button onClick={() => joinGameRoom(true)}>Play Vs. Friend</button>
           </div>
         </div>
       ) : (
         <>
           <header>
             <h1>Battleship</h1>
+            {isMultiplayer && <div className="game-id-badge">
+              Room: {gameId} 
+              {` (${participantCount}/2 players)`}
+            </div>}
             {phase === "setup" && (
               <div className="setup">
                 {!placement ? (
                   <>
-                    <button onClick={startManualSetup}>Manual</button>
-                    <button onClick={startGame}>Start</button>
+                    <button
+                      className="start-btn"
+                      onClick={handleStartGame}
+                      disabled={(isMultiplayer && participantCount < 2) || imReady}
+                    >
+                      {imReady 
+                        ? "Waiting for opponent..." 
+                        : isMultiplayer && participantCount < 2 
+                          ? "Waiting for opponent to join..." 
+                          : "I'm Ready"}
+                    </button>
                   </>
                 ) : (
                   <div className="placement-info">
