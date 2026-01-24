@@ -126,21 +126,34 @@ function App() {
     });
 
     socket.on("playerJoined", (data) => {
-
+      setParticipantCount(data.participantCount);
+      console.log("Player joined:", data.playerId);
     });
 
     socket.on("playerReady", (data) => {
-
+      setReadyStatus(data.message);
+      setImReady(true);
     });
 
     socket.on("playerMarkedReady", (data) => {
-
+      setReadyStatus(`${data.playerId.slice(0, 8)} is ready!`);
+      setTimeout(() => setReadyStatus(""), 3000);
     });
 
     socket.on("error", (data) => {
-
+      console.log(data.message);
     });
-  }, []);
+
+    return () => {
+      socket.off("gameState");
+      socket.off("playerJoined");
+      socket.off("error");
+      socket.off("shipsCleared");
+      socket.off("playerReady");
+      socket.off("playerMarkedReady");
+      socket.disconnect();
+    };
+  }, [delay, pendingPlayerBoardUpdate]);
 
   
   // useEffect(() => {
