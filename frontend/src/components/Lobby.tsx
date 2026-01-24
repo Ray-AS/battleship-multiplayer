@@ -41,7 +41,13 @@ export default function Lobby({
               onChange={(e) => setJoinId(e.target.value)}
             />
             <div className="button-group">
-              <button onClick={() => onJoinGame}>Join</button>
+              <button
+                onClick={() => {
+                  onJoinGame(joinId);
+                }}
+              >
+                Join
+              </button>
               <button onClick={() => setJoinMode(false)}>Cancel</button>
             </div>
           </>

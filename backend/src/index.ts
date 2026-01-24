@@ -78,7 +78,7 @@ io.on("connection", (socket) => {
     const currentState = await gameController.getGame(gameId, playerId);
     socket.emit("gameState", currentState.data);
 
-    socket.to(gameId).emit("playerJoined", { playerId });
+    socket.to(gameId).emit("playerJoined", { playerId, participantCount: session.participants.size });
   });
 
   socket.on("startGame", async ({ gameId, playerId }) => {

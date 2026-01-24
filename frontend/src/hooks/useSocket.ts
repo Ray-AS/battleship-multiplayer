@@ -61,7 +61,7 @@ export function useSocket({
       if (data.participantCount !== undefined) {
         setGameState((prev) => ({
           ...prev,
-          participantCount: data.participationCount,
+          participantCount: data.participantCount,
         }));
       }
 

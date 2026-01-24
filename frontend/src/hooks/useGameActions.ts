@@ -20,6 +20,7 @@ interface UseGameActionsParams {
   pendingPlayerBoardRef: React.RefObject<null>;
   setPendingWinner: React.Dispatch<React.SetStateAction<PlayerType | null>>;
   setJoinMode: React.Dispatch<React.SetStateAction<boolean>>;
+  joinId: string;
   setJoinId: React.Dispatch<React.SetStateAction<string>>;
   hasAttackedRef: React.RefObject<boolean>;
 }
@@ -39,6 +40,7 @@ export function useGameActions({
   pendingPlayerBoardRef,
   setPendingWinner,
   setJoinMode,
+  joinId,
   setJoinId,
   hasAttackedRef,
 }: UseGameActionsParams) {
@@ -56,12 +58,12 @@ export function useGameActions({
     const res = await api.createGame(id, MY_ID, isMulti);
     console.log("createGame response:", res);
 
-    if (res.error && res.error !== "Game already exists") {
+    if ("error" in res && res.error !== "Game already exists") {
       setErrorMsg(res.error);
       return;
     }
 
-    if (res.participantCount !== undefined) {
+    if ("participantCount" in res && res.participantCount !== undefined) {
       setGameState((prev) => ({
         ...prev,
         participantCount: res.participantCount,
@@ -71,7 +73,7 @@ export function useGameActions({
     socket.emit("joinGame", { gameId: id, playerId: MY_ID });
   }
 
-  async function joinExistingGame(joinId: string) {
+  async function joinExistingGame() {
     if (!joinId.trim()) {
       setErrorMsg("Please enter a Game ID");
       return;
@@ -88,12 +90,12 @@ export function useGameActions({
     const res = await api.createGame(joinId, MY_ID, true);
     console.log("joinGame response:", res);
 
-    if (res.error && res.error !== "Game already exists") {
+    if ("error" in res && res.error !== "Game already exists") {
       setErrorMsg(res.error);
       return;
     }
 
-    if (res.participantCount !== undefined) {
+    if ("participantCount" in res && res.participantCount !== undefined) {
       setGameState((prev) => ({
         ...prev,
         participantCount: res.participantCount,
@@ -119,6 +121,11 @@ export function useGameActions({
         orientation: placement.orientation,
       });
 
+      if("error" in res) {
+        setErrorMsg(res.error || "Invalid Placement");
+        return;
+      }
+
       if (res.board) {
         setPlayerBoard(res.board);
         if (placement.index < SHIPS.length - 1) {
@@ -126,8 +133,6 @@ export function useGameActions({
         } else {
           setPlacement(null);
         }
-      } else {
-        setErrorMsg(res.error || "Invalid Placement");
       }
     } else if (gameState.phase === "playing" && gameState.myTurn) {
       hasAttackedRef.current = true;
