@@ -6,8 +6,7 @@ import {
   type PlacementState,
   type Position,
 } from "../models.ts";
-import { useContext, useState } from "react";
-import { PlayerContext } from "./PlayerContext";
+import { useState } from "react";
 import { SHIPS } from "../configs.ts";
 
 interface boardProps {
@@ -16,6 +15,7 @@ interface boardProps {
   phase: GamePhase;
   onInteract: (position: Position) => void;
   placement?: PlacementState | null;
+  myTurn?: boolean;
 }
 
 export default function Board({
@@ -24,8 +24,8 @@ export default function Board({
   phase,
   onInteract,
   placement,
+  myTurn = false,
 }: boardProps) {
-  const { currentPlayer } = useContext(PlayerContext)!;
   const [hoveredCells, setHoveredCells] = useState<Position[]>([]);
   const [isValidPlacement, setIsValidPlacement] = useState(true);
 
@@ -39,7 +39,7 @@ export default function Board({
       if (pos.x < 0 || pos.x >= 10 || pos.y < 0 || pos.y >= 10) {
         return false;
       }
-      // Check Overlap (Is there already a ship?)
+      // Check Overlap
       // Safely access boardData using optional chaining just in case
       const cell = boardData[pos.y]?.[pos.x];
       return cell && cell.type !== "ship"; 
@@ -93,12 +93,16 @@ export default function Board({
           // 2. Setup: disable enemy board, or player board if not placing
           // 3. Playing: disable player board, or enemy board if not player's turn
           let disabled = false;
-          if (phase === "setup") {
+          if(phase === "ended") {
+            disabled = true;
+          } else if (phase === "setup") {
             disabled = playerRole === "Computer" || !placement;
           } else if (phase === "playing") {
-            disabled = playerRole === "Player" || currentPlayer !== "Player";
-          } else {
-            disabled = true;
+            if (playerRole === "Player") {
+              disabled = true;
+            } else {
+              disabled = !myTurn;
+            }
           }
 
           return (

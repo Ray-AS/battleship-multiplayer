@@ -6,16 +6,16 @@ import type {
   GamePhase,
   PlacementState,
   Position,
-  Board as BoardT
+  Board as BoardT,
 } from "./models.ts";
 import { PlayerContext } from "./components/PlayerContext";
 import { api } from "./api.ts";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import { SHIPS } from "./configs.ts";
 import { socket } from "./socket.ts";
 
 function getSessionPlayerId() {
-  const sessionKey = 'bs_session_player_id';
+  const sessionKey = "bs_session_player_id";
   let id = sessionStorage.getItem(sessionKey);
   if (!id) {
     id = uuidv4();
@@ -26,9 +26,10 @@ function getSessionPlayerId() {
 
 const MY_ID = getSessionPlayerId();
 
-const createEmptyBoard = () => Array.from({ length: 10 }, () => 
-  Array.from({ length: 10 }, () => ({ type: "empty" }))
-);
+const createEmptyBoard = () =>
+  Array.from({ length: 10 }, () =>
+    Array.from({ length: 10 }, () => ({ type: "empty" })),
+  );
 
 function App() {
   const [gameId, setGameId] = useState("");
@@ -44,8 +45,9 @@ function App() {
   const [myTurn, setMyTurn] = useState(false);
 
   const [delay, setDelay] = useState(1);
-  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] = useState<BoardT | null>(null);
-  const [readyStatus, setReadyStatus] = useState<string>("");
+  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] =
+    useState<BoardT | null>(null);
+  // const [readyStatus, setReadyStatus] = useState<string>("");
   const [imReady, setImReady] = useState(false);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ function App() {
 
     socket.on("gameState", (data) => {
       console.log("Received gameState:", data);
-      
+
       // Only process if this state update is for me or if it is broadcast
       if (data.forPlayerId && data.forPlayerId !== MY_ID) {
         console.log("Ignoring gameState for different player");
@@ -64,7 +66,7 @@ function App() {
 
       setPhase(data.phase);
       setMyTurn(data.turn === MY_ID);
-      
+
       setCurrentPlayer(data.turn === MY_ID ? "Player" : "Computer");
 
       if (data.isMultiplayer !== undefined) {
@@ -75,7 +77,7 @@ function App() {
       }
 
       if (data.phase === "playing") {
-        setReadyStatus("");
+        // setReadyStatus("");
         setImReady(false);
       }
 
@@ -89,11 +91,11 @@ function App() {
         setOpponentBoard(opponentBoardData);
       }
 
-      if(myBoardData) {
+      if (myBoardData) {
         // Detect if this is an AI counterattack (single-player only)
-        const shouldDelay = 
-          !data.isMultiplayer && 
-          delay > 0 && 
+        const shouldDelay =
+          !data.isMultiplayer &&
+          delay > 0 &&
           data.phase === "playing" &&
           pendingPlayerBoardUpdate === null;
 
@@ -114,7 +116,7 @@ function App() {
         } else {
           // No delay needed (game setup, game end, multiplayer, or already pending)
           setPlayerBoard(myBoardData);
-          
+
           // If there was a pending update, clear it
           if (delayTimeout) {
             clearTimeout(delayTimeout);
@@ -130,15 +132,15 @@ function App() {
       console.log("Player joined:", data.playerId);
     });
 
-    socket.on("playerReady", (data) => {
-      setReadyStatus(data.message);
+    socket.on("playerReady", () => {
+      // setReadyStatus(data.message);
       setImReady(true);
     });
 
-    socket.on("playerMarkedReady", (data) => {
-      setReadyStatus(`${data.playerId.slice(0, 8)} is ready!`);
-      setTimeout(() => setReadyStatus(""), 3000);
-    });
+    // socket.on("playerMarkedReady", (data) => {
+    //   setReadyStatus(`${data.playerId.slice(0, 8)} is ready!`);
+    //   setTimeout(() => setReadyStatus(""), 3000);
+    // });
 
     socket.on("error", (data) => {
       console.log(data.message);
@@ -159,7 +161,7 @@ function App() {
     const id = uuidv4();
 
     console.log("Joining game room:", { id, isMulti, MY_ID });
-    
+
     setGameId(id);
     setIsMultiplayer(isMulti);
 
@@ -213,9 +215,9 @@ function App() {
 
   function handlePlaceManually() {
     // Clear existing ships before starting new placement
-    if (playerBoard.flat().some(cell => cell.type === "ship")) {
+    if (playerBoard.flat().some((cell) => cell.type === "ship")) {
       socket.emit("clearShips", { gameId, playerId: MY_ID });
-      
+
       // Listen for clear confirmation
       socket.once("shipsCleared", (data) => {
         if (data.board) {
@@ -233,7 +235,7 @@ function App() {
 
   //   async function setup() {
   //     const res = await api.createGame(gameId);
-      
+
   //     // Only update state if the component is still mounted
   //     if (isMounted) {
   //       setPlayerBoard(res.playerBoard);
@@ -253,11 +255,11 @@ function App() {
   // function startManualSetup() {
   //   // Generate a new ID (this resets the backend via the useEffect)
   //   const newId = uuidv4();
-  //   setGameId(newId); 
-    
+  //   setGameId(newId);
+
   //   // Set the placement state to start the manual process
   //   setPlacement({ index: 0, orientation: "horizontal" });
-    
+
   //   // Reset local phase/winner state just in case
   //   setPhase("setup");
   //   setWinner("None");
@@ -278,7 +280,6 @@ function App() {
   //   setCurrentPlayer("None");
   //   setWinner("None");
   // }
- 
 
   // async function handleCellClick(position: Position) {
   //   if (phase === "setup" && placement) {
@@ -306,7 +307,7 @@ function App() {
 
   //     // Only show opponent board; hold off on showing player board until the timeout is over for a more natural feel
   //     setOpponentBoard(res.boards.opponent);
-      
+
   //     if (res.phase === "ended") {
   //       // If AI attack is null, it means player won on their turn
   //       setPlayerBoard(res.boards.player);
@@ -347,7 +348,9 @@ function App() {
         <div className="lobby">
           <h1>Battleship</h1>
           <div className="lobby-controls">
-            <button onClick={() => joinGameRoom(false)}>Play Vs. Computer</button>
+            <button onClick={() => joinGameRoom(false)}>
+              Play Vs. Computer
+            </button>
             <button onClick={() => joinGameRoom(true)}>Play Vs. Friend</button>
           </div>
         </div>
@@ -355,10 +358,12 @@ function App() {
         <>
           <header>
             <h1>Battleship</h1>
-            {isMultiplayer && <div className="game-id-badge">
-              Room: {gameId} 
-              {` (${participantCount}/2 players)`}
-            </div>}
+            {isMultiplayer && (
+              <div className="game-id-badge">
+                Room: {gameId}
+                {` (${participantCount}/2 players)`}
+              </div>
+            )}
             {phase === "setup" && (
               <div className="setup">
                 {!placement ? (
@@ -366,69 +371,100 @@ function App() {
                     <button
                       className="start-btn"
                       onClick={handleStartGame}
-                      disabled={(isMultiplayer && participantCount < 2) || imReady}
+                      disabled={
+                        (isMultiplayer && participantCount < 2) || imReady
+                      }
                     >
-                      {imReady 
-                        ? "Waiting for opponent..." 
-                        : isMultiplayer && participantCount < 2 
-                          ? "Waiting for opponent to join..." 
+                      {imReady
+                        ? "Waiting for opponent..."
+                        : isMultiplayer && participantCount < 2
+                          ? "Waiting for opponent to join..."
                           : "I'm Ready"}
+                    </button>
+                    <button
+                      className="place-manually-btn"
+                      onClick={handlePlaceManually}
+                      disabled={imReady}
+                    >
+                      Place Ships Manually
                     </button>
                   </>
                 ) : (
                   <div className="placement-info">
-                    <p>Placing: <strong>{SHIPS[placement.index].model.toUpperCase()}</strong></p>
-                    <button onClick={() => setPlacement({
-                      ...placement, 
-                      orientation: placement.orientation === "horizontal" ? "vertical" : "horizontal"
-                    })}>
+                    <p>
+                      Placing:{" "}
+                      <strong>
+                        {SHIPS[placement.index].model.toUpperCase()}
+                      </strong>
+                    </p>
+                    <button
+                      onClick={() =>
+                        setPlacement({
+                          ...placement,
+                          orientation:
+                            placement.orientation === "horizontal"
+                              ? "vertical"
+                              : "horizontal",
+                        })
+                      }
+                    >
                       {placement.orientation}
                     </button>
-                    <button onClick={cancelSetup}>Cancel</button>
                   </div>
                 )}
               </div>
             )}
             {phase === "playing" && (
               <>
-                <div className={"settings"}>
-                  <label>
-                    AI Delay (s):{" "}
-                    <input
-                      type="number"
-                      min={0}
-                      max={5}
-                      step={1}
-                      value={delay}
-                      onChange={(e) => {
-                        let val = Math.floor(Number(e.target.value)); // remove decimals
-                        if (val < 0) val = 0;
-                        if (val > 5) val = 5;
-                        setDelay(val);
-                      }}
-                    />
-                  </label>
-                </div>
-                <div className={`status-bar ${currentPlayer.toLowerCase()}`}>
-                  {currentPlayer === "Player" ? "YOUR TURN" : "ENEMY ATTACKING..."}
+                {!isMultiplayer && (
+                  <div className={"settings"}>
+                    <label>
+                      AI Delay (s):{" "}
+                      <input
+                        type="number"
+                        min={0}
+                        max={5}
+                        step={1}
+                        value={delay}
+                        onChange={(e) => {
+                          let val = Math.floor(Number(e.target.value)); // remove decimals
+                          if (val < 0) val = 0;
+                          if (val > 5) val = 5;
+                          setDelay(val);
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+                <div className={`status-bar ${myTurn ? "player" : "opponent"}`}>
+                  {myTurn ? "YOUR ATTACKING..." : "ENEMY ATTACKING..."}
                 </div>
               </>
             )}
             {phase === "ended" && (
               <div className="game-over">
                 <h3>{winner === "Player" ? "VICTORY!" : "DEFEAT!"}</h3>
-                <button onClick={() => setGameId(uuidv4())}>New Game</button>
+                <button
+                  onClick={() => {
+                    setGameId("");
+                    setPhase("setup");
+                    setWinner("None");
+                    setPlayerBoard(createEmptyBoard() as BoardT);
+                    setOpponentBoard(createEmptyBoard() as BoardT);
+                    setImReady(false);
+                    // setReadyStatus("");
+                    setPendingPlayerBoardUpdate(null);
+                  }}
+                >
+                  New Game
+                </button>
               </div>
             )}
           </header>
           <section className="boards-container">
             <PlayerContext.Provider value={{ currentPlayer, setCurrentPlayer }}>
               <div className="board-wrapper">
-                <div
-                  className={`board-label left ${
-                    currentPlayer === "Player" ? "active" : ""
-                  }`}
-                >
+                <div className={`board-label left ${myTurn ? "active" : ""}`}>
                   YOUR FLEET
                 </div>
                 <Board
@@ -440,7 +476,9 @@ function App() {
                 />
               </div>
               <div className="board-wrapper">
-                <div className={`board-label right ${currentPlayer === "Computer" ? "active" : ""}`}>
+                <div
+                  className={`board-label right ${!myTurn && phase === "playing" ? "active" : ""}`}
+                >
                   ENEMY WATERS
                 </div>
                 <Board
@@ -448,6 +486,7 @@ function App() {
                   boardData={opponentBoard}
                   phase={phase}
                   onInteract={handleCellClick}
+                  myTurn={myTurn}
                 />
               </div>
             </PlayerContext.Provider>
