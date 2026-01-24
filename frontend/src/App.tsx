@@ -7,6 +7,7 @@ import type {
   PlacementState,
   Position,
   Board as BoardT,
+  Cell as CellT,
 } from "./models.ts";
 import { PlayerContext } from "./components/PlayerContext";
 import { api } from "./api.ts";
@@ -26,15 +27,16 @@ function getSessionPlayerId() {
 
 const MY_ID = getSessionPlayerId();
 
-const createEmptyBoard = () =>
+const createEmptyBoard: () => BoardT = () =>
   Array.from({ length: 10 }, () =>
     Array.from({ length: 10 }, () => ({ type: "empty" })),
   );
 
 function App() {
   const [gameId, setGameId] = useState("");
-  const [playerBoard, setPlayerBoard] = useState<BoardT>([]);
-  const [opponentBoard, setOpponentBoard] = useState<BoardT>([]);
+  const [playerBoard, setPlayerBoard] = useState<BoardT>(createEmptyBoard());
+  const [opponentBoard, setOpponentBoard] =
+    useState<BoardT>(createEmptyBoard());
   const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
 
@@ -49,6 +51,9 @@ function App() {
     useState<BoardT | null>(null);
   // const [readyStatus, setReadyStatus] = useState<string>("");
   const [imReady, setImReady] = useState(false);
+
+  const [joinMode, setJoinMode] = useState(false);
+  const [joinId, setJoinId] = useState("");
 
   useEffect(() => {
     socket.connect();
@@ -125,6 +130,13 @@ function App() {
           setPendingPlayerBoardUpdate(null);
         }
       }
+
+      if (data.phase === "ended") {
+        const myShipsRemaining = myBoardData
+          ?.flat()
+          .some((cell: CellT) => cell.type === "ship");
+        setWinner(myShipsRemaining ? "Player" : "Computer");
+      }
     });
 
     socket.on("playerJoined", (data) => {
@@ -157,10 +169,9 @@ function App() {
     };
   }, [delay, pendingPlayerBoardUpdate]);
 
-  async function joinGameRoom(isMulti: boolean) {
+  async function createNewGame(isMulti: boolean) {
     const id = uuidv4();
-
-    console.log("Joining game room:", { id, isMulti, MY_ID });
+    console.log("Creating new game:", { id, isMulti, MY_ID });
 
     setGameId(id);
     setIsMultiplayer(isMulti);
@@ -169,14 +180,42 @@ function App() {
     console.log("createGame response:", res);
 
     if (res.error && res.error !== "Game already exists") {
-      console.log(res.error);
+      alert(res.error);
       return;
     }
 
     socket.emit("joinGame", { gameId: id, playerId: MY_ID });
   }
 
+  async function joinExistingGame() {
+    if (!joinId.trim()) {
+      console.error("Please enter a Game ID");
+      return;
+    }
+
+    console.log("Joining existing game:", { joinId, MY_ID });
+
+    setGameId(joinId);
+    setIsMultiplayer(true); // Joining always means multiplayer
+
+    const res = await api.createGame(joinId, MY_ID, true);
+    console.log("joinGame response:", res);
+
+    if (res.error && res.error !== "Game already exists") {
+      console.log(res.error);
+      return;
+    }
+
+    socket.emit("joinGame", { gameId: joinId, playerId: MY_ID });
+    setJoinMode(false);
+    setJoinId("");
+  }
+
   async function handleCellClick(position: Position) {
+    // if (pendingPlayerBoardUpdate) {
+    //   return;
+    // }
+
     if (phase === "setup" && placement) {
       const res = await api.placeShip(gameId, {
         playerId: MY_ID,
@@ -208,8 +247,6 @@ function App() {
 
   function handleStartGame() {
     console.log("Starting game via socket");
-    console.log("MY_ID:", MY_ID);
-    console.log("gameId:", gameId);
     socket.emit("startGame", { gameId, playerId: MY_ID });
   }
 
@@ -228,6 +265,18 @@ function App() {
     } else {
       setPlacement({ index: 0, orientation: "horizontal" });
     }
+  }
+
+  function resetGame() {
+    setGameId("");
+    setPhase("setup");
+    setWinner("None");
+    setPlayerBoard(createEmptyBoard());
+    setOpponentBoard(createEmptyBoard());
+    setImReady(false);
+    setPendingPlayerBoardUpdate(null);
+    setJoinMode(false);
+    setJoinId("");
   }
 
   // useEffect(() => {
@@ -342,16 +391,43 @@ function App() {
   //   setCurrentPlayer(res.turn === "player" ? "Player" : "Computer");
   // }
 
+  const isAIThinking = pendingPlayerBoardUpdate !== null;
+  const canInteract = !isAIThinking && myTurn && phase === "playing";
+
   return (
     <>
       {!gameId ? (
         <div className="lobby">
           <h1>Battleship</h1>
           <div className="lobby-controls">
-            <button onClick={() => joinGameRoom(false)}>
-              Play Vs. Computer
-            </button>
-            <button onClick={() => joinGameRoom(true)}>Play Vs. Friend</button>
+            {!joinMode ? (
+              <>
+                <button onClick={() => createNewGame(false)}>
+                  Play Vs. Computer
+                </button>
+                <button onClick={() => createNewGame(true)}>
+                  Create Multiplayer Game
+                </button>
+                <button onClick={() => setJoinMode(true)}>
+                  Join Multiplayer Game
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>Join Game</h3>
+                <input
+                  type="text"
+                  placeholder="Enter Game ID"
+                  value={joinId}
+                  onChange={(e) => setJoinId(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && joinExistingGame()}
+                />
+                <div className="button-group">
+                  <button onClick={joinExistingGame}>Join</button>
+                  <button onClick={() => setJoinMode(false)}>Cancel</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -436,35 +512,28 @@ function App() {
                     </label>
                   </div>
                 )}
-                <div className={`status-bar ${myTurn ? "player" : "opponent"}`}>
-                  {myTurn ? "YOUR ATTACKING..." : "ENEMY ATTACKING..."}
+                <div
+                  className={`status-bar ${isAIThinking ? "opponent" : myTurn ? "player" : "opponent"}`}
+                >
+                  {isAIThinking
+                    ? "ENEMY ATTACKING..."
+                    : myTurn
+                      ? "YOUR TURN"
+                      : "OPPONENT'S TURN"}
                 </div>
               </>
             )}
             {phase === "ended" && (
               <div className="game-over">
                 <h3>{winner === "Player" ? "VICTORY!" : "DEFEAT!"}</h3>
-                <button
-                  onClick={() => {
-                    setGameId("");
-                    setPhase("setup");
-                    setWinner("None");
-                    setPlayerBoard(createEmptyBoard() as BoardT);
-                    setOpponentBoard(createEmptyBoard() as BoardT);
-                    setImReady(false);
-                    // setReadyStatus("");
-                    setPendingPlayerBoardUpdate(null);
-                  }}
-                >
-                  New Game
-                </button>
+                <button onClick={resetGame}>New Game</button>
               </div>
             )}
           </header>
           <section className="boards-container">
             <PlayerContext.Provider value={{ currentPlayer, setCurrentPlayer }}>
               <div className="board-wrapper">
-                <div className={`board-label left ${myTurn ? "active" : ""}`}>
+                <div className={`board-label left ${myTurn && !isAIThinking ? "active" : ""}`}>
                   YOUR FLEET
                 </div>
                 <Board
@@ -477,7 +546,7 @@ function App() {
               </div>
               <div className="board-wrapper">
                 <div
-                  className={`board-label right ${!myTurn && phase === "playing" ? "active" : ""}`}
+                  className={`board-label right ${canInteract ? "active" : ""}`}
                 >
                   ENEMY WATERS
                 </div>
@@ -486,7 +555,7 @@ function App() {
                   boardData={opponentBoard}
                   phase={phase}
                   onInteract={handleCellClick}
-                  myTurn={myTurn}
+                  myTurn={canInteract}
                 />
               </div>
             </PlayerContext.Provider>
