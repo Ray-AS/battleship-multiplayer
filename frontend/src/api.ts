@@ -23,12 +23,12 @@ export const api = {
   startGame: (id: string): Promise<AttackResponse> =>
     fetch(`${API_URL}/${id}/start`, { method: "POST" }).then((r) => r.json()),
 
-  attack: (id: string, x: number, y: number): Promise<AttackResponse> =>
+  attack: (id: string, attackerId: string, x: number, y: number): Promise<AttackResponse> => 
     fetch(`${API_URL}/${id}/attack`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x, y }),
-    }).then((r) => r.json()),
+      body: JSON.stringify({ attackerId, x, y }),
+    }).then(r => r.json()),
 
   getGame: (id: string) => fetch(`${API_URL}/${id}`).then((r) => r.json()),
 };
