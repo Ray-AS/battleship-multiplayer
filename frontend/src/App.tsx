@@ -34,7 +34,7 @@ function App() {
   const [gameId, setGameId] = useState("");
   const [playerBoard, setPlayerBoard] = useState<BoardT>([]);
   const [opponentBoard, setOpponentBoard] = useState<BoardT>([]);
-  // const [isMultiplayer, setIsMultiplayer] = useState(false);
+  const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
 
   const [phase, setPhase] = useState<GamePhase>("setup");
@@ -43,14 +43,86 @@ function App() {
   const [placement, setPlacement] = useState<PlacementState | null>(null);
   const [myTurn, setMyTurn] = useState(false);
 
+  const [delay, setDelay] = useState(1);
+  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] = useState<BoardT | null>(null);
   const [readyStatus, setReadyStatus] = useState<string>("");
   const [imReady, setImReady] = useState(false);
 
   useEffect(() => {
     socket.connect();
 
-    socket.on("gameState", (data) => {
+    let delayTimeout: number | null = null;
 
+    socket.on("gameState", (data) => {
+      console.log("Received gameState:", data);
+      
+      // Only process if this state update is for me or if it is broadcast
+      if (data.forPlayerId && data.forPlayerId !== MY_ID) {
+        console.log("Ignoring gameState for different player");
+        return;
+      }
+
+      setPhase(data.phase);
+      setMyTurn(data.turn === MY_ID);
+      
+      setCurrentPlayer(data.turn === MY_ID ? "Player" : "Computer");
+
+      if (data.isMultiplayer !== undefined) {
+        setIsMultiplayer(data.isMultiplayer);
+      }
+      if (data.participantCount !== undefined) {
+        setParticipantCount(data.participantCount);
+      }
+
+      if (data.phase === "playing") {
+        setReadyStatus("");
+        setImReady(false);
+      }
+
+      const participantIds = Object.keys(data.boards);
+      const myBoardData = data.boards[MY_ID];
+      const opponentId = participantIds.find((id) => id !== MY_ID);
+      const opponentBoardData = opponentId ? data.boards[opponentId] : null;
+
+      // No delay on showing my attacks
+      if (opponentBoardData) {
+        setOpponentBoard(opponentBoardData);
+      }
+
+      if(myBoardData) {
+        // Detect if this is an AI counterattack (single-player only)
+        const shouldDelay = 
+          !data.isMultiplayer && 
+          delay > 0 && 
+          data.phase === "playing" &&
+          pendingPlayerBoardUpdate === null;
+
+        if (shouldDelay) {
+          // Clear any existing timeout
+          if (delayTimeout) {
+            clearTimeout(delayTimeout);
+          }
+
+          // Show my attack immediately (opponent board already updated)
+          // Delay showing AI's attack on my board
+          setPendingPlayerBoardUpdate(myBoardData);
+          delayTimeout = setTimeout(() => {
+            setPlayerBoard(myBoardData);
+            setPendingPlayerBoardUpdate(null);
+            delayTimeout = null;
+          }, delay * 1000);
+        } else {
+          // No delay needed (game setup, game end, multiplayer, or already pending)
+          setPlayerBoard(myBoardData);
+          
+          // If there was a pending update, clear it
+          if (delayTimeout) {
+            clearTimeout(delayTimeout);
+            delayTimeout = null;
+          }
+          setPendingPlayerBoardUpdate(null);
+        }
+      }
     });
 
     socket.on("playerJoined", (data) => {
