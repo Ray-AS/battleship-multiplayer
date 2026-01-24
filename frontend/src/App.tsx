@@ -9,7 +9,7 @@ import type {
   Board as BoardT,
   Cell as CellT,
 } from "./models.ts";
-import { PlayerContext } from "./components/PlayerContext";
+// import { PlayerContext } from "./components/PlayerContext";
 import { api } from "./api.ts";
 import { v4 as uuidv4 } from "uuid";
 import { SHIPS } from "./configs.ts";
@@ -39,39 +39,32 @@ function App() {
     isMultiplayer: false,
     participantCount: 1,
     winner: "None" as PlayerType,
-    currentPlayer: "None" as PlayerType,
     myTurn: false,
     imReady: false,
   });
 
-  // const [gameId, setGameId] = useState("");
   const [playerBoard, setPlayerBoard] = useState<BoardT>(createEmptyBoard());
   const [opponentBoard, setOpponentBoard] =
     useState<BoardT>(createEmptyBoard());
-  // const [isMultiplayer, setIsMultiplayer] = useState(false);
-  // const [participantCount, setParticipantCount] = useState(1);
-
-  // const [phase, setPhase] = useState<GamePhase>("setup");
-  // const [currentPlayer, setCurrentPlayer] = useState<PlayerType>("None");
-  // const [winner, setWinner] = useState<PlayerType>("None");
   const [placement, setPlacement] = useState<PlacementState | null>(null);
-  const [myTurn, setMyTurn] = useState(false);
 
   const [delay, setDelay] = useState(1);
-  const delayRef = useRef(1)
-  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] = useState(null);
+  const delayRef = useRef(1);
+  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] =
+    useState(null);
   const pendingPlayerBoardRef = useRef(null);
   const pendingOpponentBoardRef = useRef<BoardT | null>(null);
   const [pendingWinner, setPendingWinner] = useState<PlayerType | null>(null);
   const hasAttackedRef = useRef(false);
   // const [readyStatus, setReadyStatus] = useState<string>("");
-  // const [imReady, setImReady] = useState(false);
 
   const [joinMode, setJoinMode] = useState(false);
   const [joinId, setJoinId] = useState("");
 
   function calculateWinner(boardData: BoardT): PlayerType {
-    const myShipsRemaining = boardData?.flat().some((cell: CellT) => cell.type === "ship");
+    const myShipsRemaining = boardData
+      ?.flat()
+      .some((cell: CellT) => cell.type === "ship");
     return myShipsRemaining ? "Player" : "Computer";
   }
 
@@ -82,16 +75,18 @@ function App() {
   // 4. I have made at least one attack (not the initial board state)
   // 5. No pending update already
   function shouldDelayUpdate(data: any) {
-    return !data.isMultiplayer &&
-    delayRef.current > 0 &&
-    (data.phase === "playing" || data.phase === "ended") &&
-    hasAttackedRef.current &&
-    !pendingPlayerBoardRef.current;
+    return (
+      !data.isMultiplayer &&
+      delayRef.current > 0 &&
+      (data.phase === "playing" || data.phase === "ended") &&
+      hasAttackedRef.current &&
+      !pendingPlayerBoardRef.current
+    );
   }
 
   function getStatusMessage() {
     if (isAIThinking) return "ENEMY ATTACKING...";
-    return myTurn ? "YOU'RE ATTACKING..." : "ENEMY ATTACKING...";
+    return gameState.myTurn ? "YOU'RE ATTACKING..." : "ENEMY ATTACKING...";
   }
 
   useEffect(() => {
@@ -108,21 +103,31 @@ function App() {
         return;
       }
 
-      setPhase(data.phase);
-      setMyTurn(data.turn === MY_ID);
-
-      setCurrentPlayer(data.turn === MY_ID ? "Player" : "Computer");
+      setGameState((prev) => ({
+        ...prev,
+        phase: data.phase,
+        myTurn: data.turn === MY_ID,
+      }));
 
       if (data.isMultiplayer !== undefined) {
-        setIsMultiplayer(data.isMultiplayer);
+        setGameState((prev) => ({
+          ...prev,
+          isMultiplayer: data.isMultiplayer,
+        }));
       }
       if (data.participantCount !== undefined) {
-        setParticipantCount(data.participantCount);
+        setGameState((prev) => ({
+          ...prev,
+          participantCount: data.participationCount,
+        }));
       }
 
       if (data.phase === "playing") {
         // setReadyStatus("");
-        setImReady(false);
+        setGameState((prev) => ({
+          ...prev,
+          imReady: false,
+        }));
       }
 
       const participantIds = Object.keys(data.boards);
@@ -157,9 +162,6 @@ function App() {
 
           // Also delay winner reveal if game ended
           if (data.phase === "ended") {
-            // const myShipsRemaining = myBoardData
-            //   ?.flat()
-            //   .some((cell: CellT) => cell.type === "ship");
             setPendingWinner(calculateWinner(myBoardData));
           }
 
@@ -175,10 +177,10 @@ function App() {
 
             // Set winner after delay if game ended
             if (data.phase === "ended") {
-              // const myShipsRemaining = myBoardData
-              //   ?.flat()
-              //   .some((cell: CellT) => cell.type === "ship");
-              setWinner(calculateWinner(myBoardData));
+              setGameState((prev) => ({
+                ...prev,
+                winner: calculateWinner(myBoardData),
+              }));
               setPendingWinner(null);
             }
 
@@ -197,25 +199,30 @@ function App() {
           pendingPlayerBoardRef.current = null;
 
           if (data.phase === "ended") {
-            // const myShipsRemaining = myBoardData
-            //   ?.flat()
-            //   .some((cell: CellT) => cell.type === "ship");
-            setWinner(calculateWinner(myBoardData));
+            setGameState((prev) => ({
+              ...prev,
+              winner: calculateWinner(myBoardData),
+            }));
             setPendingWinner(null);
           }
         }
       }
-
     });
 
     socket.on("playerJoined", (data) => {
-      setParticipantCount(data.participantCount);
+      setGameState((prev) => ({
+        ...prev,
+        participantCount: data.participationCount,
+      }));
       console.log("Player joined:", data.playerId);
     });
 
     socket.on("playerReady", () => {
       // setReadyStatus(data.message);
-      setImReady(true);
+      setGameState((prev) => ({
+        ...prev,
+        imReady: true,
+      }));
     });
 
     // socket.on("playerMarkedReady", (data) => {
@@ -242,12 +249,14 @@ function App() {
     const id = uuidv4();
     console.log("Creating new game:", { id, isMulti, MY_ID });
 
-    setGameId(id);
-    setIsMultiplayer(isMulti);
+    setGameState((prev) => ({
+      ...prev,
+      id,
+      isMultiplayer: isMulti,
+    }));
 
     const res = await api.createGame(id, MY_ID, isMulti);
     console.log("createGame response:", res);
-    
 
     if (res.error && res.error !== "Game already exists") {
       alert(res.error);
@@ -255,7 +264,10 @@ function App() {
     }
 
     if (res.participantCount !== undefined) {
-      setParticipantCount(res.participantCount);
+      setGameState((prev) => ({
+        ...prev,
+        participantCount: res.participationCount,
+      }));
     }
 
     socket.emit("joinGame", { gameId: id, playerId: MY_ID });
@@ -269,8 +281,11 @@ function App() {
 
     console.log("Joining existing game:", { joinId, MY_ID });
 
-    setGameId(joinId);
-    setIsMultiplayer(true); // Joining always means multiplayer
+    setGameState((prev) => ({
+      ...prev,
+      id: joinId,
+      isMultiplayer: true, // Joining always means multiplayer
+    }));
 
     const res = await api.createGame(joinId, MY_ID, true);
     console.log("joinGame response:", res);
@@ -281,7 +296,10 @@ function App() {
     }
 
     if (res.participantCount !== undefined) {
-      setParticipantCount(res.participantCount);
+      setGameState((prev) => ({
+        ...prev,
+        participantCount: res.participationCount,
+      }));
     }
 
     socket.emit("joinGame", { gameId: joinId, playerId: MY_ID });
@@ -294,8 +312,8 @@ function App() {
       return;
     }
 
-    if (phase === "setup" && placement) {
-      const res = await api.placeShip(gameId, {
+    if (gameState.phase === "setup" && placement) {
+      const res = await api.placeShip(gameState.id, {
         playerId: MY_ID,
         shipModel: SHIPS[placement.index].model,
         x: position.x,
@@ -313,10 +331,10 @@ function App() {
       } else {
         console.log(res.error || "Invalid Placement");
       }
-    } else if (phase === "playing" && myTurn) {
+    } else if (gameState.phase === "playing" && gameState.myTurn) {
       hasAttackedRef.current = true;
       socket.emit("attack", {
-        gameId,
+        gameId: gameState.id,
         attackerId: MY_ID,
         x: position.x,
         y: position.y,
@@ -326,13 +344,13 @@ function App() {
 
   function handleStartGame() {
     console.log("Starting game via socket");
-    socket.emit("startGame", { gameId, playerId: MY_ID });
+    socket.emit("startGame", { gameId: gameState.id, playerId: MY_ID });
   }
 
   function handlePlaceManually() {
     // Clear existing ships before starting new placement
     if (playerBoard.flat().some((cell) => cell.type === "ship")) {
-      socket.emit("clearShips", { gameId, playerId: MY_ID });
+      socket.emit("clearShips", { gameId: gameState.id, playerId: MY_ID });
 
       // Listen for clear confirmation
       socket.once("shipsCleared", (data) => {
@@ -347,12 +365,15 @@ function App() {
   }
 
   function resetGame() {
-    setGameId("");
-    setPhase("setup");
-    setWinner("None");
+    setGameState((prev) => ({
+      ...prev,
+      id: "",
+      phase: "setup" as GamePhase,
+      winner: "None",
+      imReady: false,
+    }));
     setPlayerBoard(createEmptyBoard());
     setOpponentBoard(createEmptyBoard());
-    setImReady(false);
     setPendingPlayerBoardUpdate(null);
     setPendingWinner(null);
     setJoinMode(false);
@@ -362,11 +383,12 @@ function App() {
   }
 
   const isAIThinking = pendingPlayerBoardUpdate !== null;
-  const canInteract = !isAIThinking && myTurn && phase === "playing";
+  const canInteract =
+    !isAIThinking && gameState.myTurn && gameState.phase === "playing";
 
   return (
     <>
-      {!gameId ? (
+      {!gameState.id ? (
         <div className="lobby">
           <h1>Battleship</h1>
           <div className="lobby-controls">
@@ -404,13 +426,13 @@ function App() {
         <>
           <header>
             <h1>Battleship</h1>
-            {isMultiplayer && (
+            {gameState.isMultiplayer && (
               <div className="game-id-badge">
-                Room: {gameId}
-                {` (${participantCount === undefined ? 2 : participantCount}/2 players)`}
+                Room: {gameState.id}
+                {` (${gameState.participantCount === undefined ? 1 : gameState.participantCount}/2 players)`}
               </div>
             )}
-            {phase === "setup" && (
+            {gameState.phase === "setup" && (
               <div className="setup">
                 {!placement ? (
                   <>
@@ -418,19 +440,22 @@ function App() {
                       className="start-btn"
                       onClick={handleStartGame}
                       disabled={
-                        (isMultiplayer && participantCount < 2) || imReady
+                        (gameState.isMultiplayer &&
+                          gameState.participantCount < 2) ||
+                        gameState.imReady
                       }
                     >
-                      {imReady
+                      {gameState.imReady
                         ? "Waiting for opponent..."
-                        : isMultiplayer && participantCount < 2
+                        : gameState.isMultiplayer &&
+                            gameState.participantCount < 2
                           ? "Waiting for opponent to join..."
                           : "I'm Ready"}
                     </button>
                     <button
                       className="place-manually-btn"
                       onClick={handlePlaceManually}
-                      disabled={imReady}
+                      disabled={gameState.imReady}
                     >
                       Place Ships Manually
                     </button>
@@ -460,9 +485,10 @@ function App() {
                 )}
               </div>
             )}
-            {(phase === "playing" || (phase === "ended" && pendingWinner)) && (
+            {(gameState.phase === "playing" ||
+              (gameState.phase === "ended" && pendingWinner)) && (
               <>
-                {!isMultiplayer && (
+                {!gameState.isMultiplayer && (
                   <div className={"settings"}>
                     <label>
                       AI Delay (s):{" "}
@@ -484,48 +510,50 @@ function App() {
                   </div>
                 )}
                 <div
-                  className={`status-bar ${isAIThinking ? "opponent" : myTurn ? "player" : "opponent"}`}
+                  className={`status-bar ${isAIThinking ? "opponent" : gameState.myTurn ? "player" : "opponent"}`}
                 >
                   {getStatusMessage()}
                 </div>
               </>
             )}
-            {(phase === "ended" && !pendingWinner) && (
+            {gameState.phase === "ended" && !pendingWinner && (
               <div className="game-over">
-                <h3>{winner === "Player" ? "VICTORY!" : "DEFEAT!"}</h3>
+                <h3>
+                  {gameState.winner === "Player" ? "VICTORY!" : "DEFEAT!"}
+                </h3>
                 <button onClick={resetGame}>New Game</button>
               </div>
             )}
           </header>
           <section className="boards-container">
-            <PlayerContext.Provider value={{ currentPlayer, setCurrentPlayer }}>
-              <div className="board-wrapper">
-                <div className={`board-label left ${myTurn && phase === "playing" && !isAIThinking ? "active" : ""}`}>
-                  YOUR FLEET
-                </div>
-                <Board
-                  playerRole={"Player"}
-                  boardData={playerBoard}
-                  phase={phase}
-                  placement={placement}
-                  onInteract={handleCellClick}
-                />
+            <div className="board-wrapper">
+              <div
+                className={`board-label left ${gameState.myTurn && gameState.phase === "playing" && !isAIThinking ? "active" : ""}`}
+              >
+                YOUR FLEET
               </div>
-              <div className="board-wrapper">
-                <div
-                  className={`board-label right ${!myTurn && phase === "playing" && !isAIThinking ? "active" : ""}`}
-                >
-                  ENEMY WATERS
-                </div>
-                <Board
-                  playerRole="Computer"
-                  boardData={opponentBoard}
-                  phase={phase}
-                  onInteract={handleCellClick}
-                  myTurn={canInteract}
-                />
+              <Board
+                playerRole={"Player"}
+                boardData={playerBoard}
+                phase={gameState.phase}
+                placement={placement}
+                onInteract={handleCellClick}
+              />
+            </div>
+            <div className="board-wrapper">
+              <div
+                className={`board-label right ${!gameState.myTurn && gameState.phase === "playing" && !isAIThinking ? "active" : ""}`}
+              >
+                ENEMY WATERS
               </div>
-            </PlayerContext.Provider>
+              <Board
+                playerRole="Computer"
+                boardData={opponentBoard}
+                phase={gameState.phase}
+                onInteract={handleCellClick}
+                myTurn={canInteract}
+              />
+            </div>
           </section>
         </>
       )}
