@@ -1,6 +1,6 @@
 import "./styles/app.css";
 import Board from "./components/Board";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   PlayerType,
   GamePhase,
@@ -49,6 +49,7 @@ function App() {
   const [delay, setDelay] = useState(1);
   const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] =
     useState<BoardT | null>(null);
+  const hasAttackedRef = useRef(false);
   // const [readyStatus, setReadyStatus] = useState<string>("");
   const [imReady, setImReady] = useState(false);
 
@@ -102,6 +103,7 @@ function App() {
           !data.isMultiplayer &&
           delay > 0 &&
           data.phase === "playing" &&
+          hasAttackedRef.current &&
           pendingPlayerBoardUpdate === null;
 
         if (shouldDelay) {
@@ -113,7 +115,7 @@ function App() {
           // Show my attack immediately (opponent board already updated)
           // Delay showing AI's attack on my board
           setPendingPlayerBoardUpdate(myBoardData);
-          delayTimeout = setTimeout(() => {
+          delayTimeout = window.setTimeout(() => {
             setPlayerBoard(myBoardData);
             setPendingPlayerBoardUpdate(null);
             delayTimeout = null;
@@ -167,7 +169,7 @@ function App() {
       socket.off("playerMarkedReady");
       socket.disconnect();
     };
-  }, [delay, pendingPlayerBoardUpdate]);
+  }, []);
 
   async function createNewGame(isMulti: boolean) {
     const id = uuidv4();
@@ -178,10 +180,15 @@ function App() {
 
     const res = await api.createGame(id, MY_ID, isMulti);
     console.log("createGame response:", res);
+    
 
     if (res.error && res.error !== "Game already exists") {
       alert(res.error);
       return;
+    }
+
+    if (res.participantCount !== undefined) {
+      setParticipantCount(res.participantCount);
     }
 
     socket.emit("joinGame", { gameId: id, playerId: MY_ID });
@@ -206,15 +213,19 @@ function App() {
       return;
     }
 
+    if (res.participantCount !== undefined) {
+      setParticipantCount(res.participantCount);
+    }
+
     socket.emit("joinGame", { gameId: joinId, playerId: MY_ID });
     setJoinMode(false);
     setJoinId("");
   }
 
   async function handleCellClick(position: Position) {
-    // if (pendingPlayerBoardUpdate) {
-    //   return;
-    // }
+    if (pendingPlayerBoardUpdate) {
+      return;
+    }
 
     if (phase === "setup" && placement) {
       const res = await api.placeShip(gameId, {
@@ -236,6 +247,7 @@ function App() {
         console.log(res.error || "Invalid Placement");
       }
     } else if (phase === "playing" && myTurn) {
+      hasAttackedRef.current = true;
       socket.emit("attack", {
         gameId,
         attackerId: MY_ID,
@@ -277,119 +289,8 @@ function App() {
     setPendingPlayerBoardUpdate(null);
     setJoinMode(false);
     setJoinId("");
+    hasAttackedRef.current = false;
   }
-
-  // useEffect(() => {
-  //   let isMounted = true;
-
-  //   async function setup() {
-  //     const res = await api.createGame(gameId);
-
-  //     // Only update state if the component is still mounted
-  //     if (isMounted) {
-  //       setPlayerBoard(res.playerBoard);
-  //       setOpponentBoard(res.opponentBoard);
-  //       setPhase("setup");
-  //       setWinner("None");
-  //       setCurrentPlayer("None");
-  //     }
-  //   }
-
-  //   setup();
-
-  //   // Cleanup function to prevent memory leaks/race conditions
-  //   return () => { isMounted = false; };
-  // }, [gameId]);
-
-  // function startManualSetup() {
-  //   // Generate a new ID (this resets the backend via the useEffect)
-  //   const newId = uuidv4();
-  //   setGameId(newId);
-
-  //   // Set the placement state to start the manual process
-  //   setPlacement({ index: 0, orientation: "horizontal" });
-
-  //   // Reset local phase/winner state just in case
-  //   setPhase("setup");
-  //   setWinner("None");
-  //   setCurrentPlayer("None");
-  // }
-
-  // function cancelSetup() {
-  //   const newId = uuidv4();
-  //   setGameId(newId);
-  //   setPhase("setup");
-  //   setPlayerBoard(Array.from({ length: 10 }, () =>
-  //     Array.from({ length: 10 }, () => ({ type: "empty" }))
-  //   ));
-  //   setOpponentBoard(Array.from({ length: 10 }, () =>
-  //     Array.from({ length: 10 }, () => ({ type: "empty" }))
-  //   ));
-  //   setPlacement(null);
-  //   setCurrentPlayer("None");
-  //   setWinner("None");
-  // }
-
-  // async function handleCellClick(position: Position) {
-  //   if (phase === "setup" && placement) {
-  //     const res = await api.placeShip(gameId, {
-  //       playerId: "player",
-  //       shipModel: SHIPS[placement.index].model,
-  //       x: position.x,
-  //       y: position.y,
-  //       orientation: placement.orientation
-  //     });
-
-  //     if (res.board) {
-  //       setPlayerBoard(res.board);
-  //       if (placement.index < SHIPS.length - 1) {
-  //         setPlacement({ ...placement, index: placement.index + 1 });
-  //       } else {
-  //         setPlacement(null);
-  //       }
-  //     } else {
-  //       alert(res.error || "Invalid Placement");
-  //     }
-  //   } else if (phase === "playing" && currentPlayer === "Player") {
-  //     const res = await api.attack(gameId, position.x, position.y);
-  //     if (res.error || !res.boards) return;
-
-  //     // Only show opponent board; hold off on showing player board until the timeout is over for a more natural feel
-  //     setOpponentBoard(res.boards.opponent);
-
-  //     if (res.phase === "ended") {
-  //       // If AI attack is null, it means player won on their turn
-  //       setPlayerBoard(res.boards.player);
-  //       setPhase(res.phase);
-  //       setWinner(res.aiAttack === null ? "Player" : "Computer");
-  //       return;
-  //     }
-
-  //     // Temporarily set current player to "Computer" to show AI is thinking
-  //     setCurrentPlayer("Computer");
-
-  //     // Delay attack based on user preference
-  //     setTimeout(() => {
-  //       if(res.error || !res.boards) return;
-  //       setPlayerBoard(res.boards.player);
-  //       setOpponentBoard(res.boards.opponent);
-  //       setCurrentPlayer("Player");
-  //       setPhase(res.phase);
-  //     }, delay * 1000);
-  //   }
-  // }
-
-  // async function startGame() {
-  //   const res = await api.startGame(gameId);
-  //   if (res.error || !res.boards) {
-  //     alert(res.error);
-  //     return;
-  //   }
-  //   setPlayerBoard(res.boards.player);
-  //   setOpponentBoard(res.boards.opponent);
-  //   setPhase(res.phase);
-  //   setCurrentPlayer(res.turn === "player" ? "Player" : "Computer");
-  // }
 
   const isAIThinking = pendingPlayerBoardUpdate !== null;
   const canInteract = !isAIThinking && myTurn && phase === "playing";
@@ -437,7 +338,7 @@ function App() {
             {isMultiplayer && (
               <div className="game-id-badge">
                 Room: {gameId}
-                {` (${participantCount}/2 players)`}
+                {` (${participantCount === undefined ? 2 : participantCount}/2 players)`}
               </div>
             )}
             {phase === "setup" && (
@@ -518,8 +419,8 @@ function App() {
                   {isAIThinking
                     ? "ENEMY ATTACKING..."
                     : myTurn
-                      ? "YOUR TURN"
-                      : "OPPONENT'S TURN"}
+                      ? "YOU'RE ATTACKING..."
+                      : "ENEMY ATTACKING..."}
                 </div>
               </>
             )}
@@ -533,7 +434,7 @@ function App() {
           <section className="boards-container">
             <PlayerContext.Provider value={{ currentPlayer, setCurrentPlayer }}>
               <div className="board-wrapper">
-                <div className={`board-label left ${myTurn && !isAIThinking ? "active" : ""}`}>
+                <div className={`board-label left ${myTurn && phase === "playing" && !isAIThinking ? "active" : ""}`}>
                   YOUR FLEET
                 </div>
                 <Board
@@ -546,7 +447,7 @@ function App() {
               </div>
               <div className="board-wrapper">
                 <div
-                  className={`board-label right ${canInteract ? "active" : ""}`}
+                  className={`board-label right ${!myTurn && phase === "playing" && !isAIThinking ? "active" : ""}`}
                 >
                   ENEMY WATERS
                 </div>

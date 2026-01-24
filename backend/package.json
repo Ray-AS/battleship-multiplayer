@@ -34,6 +34,8 @@
     "@fastify/cors": "^11.2.0",
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.4",
-    "fastify": "^5.7.1"
+    "fastify": "^5.7.1",
+    "http": "^0.0.1-security",
+    "socket.io": "^4.8.3"
   }
 }

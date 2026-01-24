@@ -10,11 +10,6 @@ export async function getGame(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
   if (!session) return { status: 404, data: { error: "Game not found" } };
 
-  // const human = session.participants.get("player");
-  // const ai = session.participants.get("computer");
-  // if (!human || !ai)
-  //   return { status: 500, data: { error: "Participants not found" } };
-
   // Prepare board snapshots
   const boards = Object.fromEntries(
     Array.from(session.participants.entries()).map(([id, p]) => [
@@ -133,6 +128,7 @@ export async function startGame(sessionId: string, playerId: string) {
   const session = gameService.getSession(sessionId);
 
   if (!session) return { status: 404, data: { error: "Game not found" } };
+
   if (session.phase !== "setup")
     return { status: 400, data: { error: "Game has already started" } };
 
@@ -142,11 +138,6 @@ export async function startGame(sessionId: string, playerId: string) {
   }
 
   console.log("Session participants:", Array.from(session.participants.keys()));
-
-  const human = session.participants.get(playerId);
-  const ai = session.participants.get("computer");
-  if (!human || !ai)
-    return { status: 500, data: { error: "Participants not found" } };
 
   // Ensure two players are present in multiplayer mode
   if (session.isMultiplayer && session.participants.size < 2) {
@@ -169,24 +160,27 @@ export async function startGame(sessionId: string, playerId: string) {
     };
   }
 
-  if (player.gameboard.ships.length == 0) {
-    player.instance.randomPopulate();
-  } else if (player.gameboard.ships.length < SHIPS.length) {
-    return { status: 400, data: { error: "Not all ships have been placed" } };
+  if(player.type === "human") {
+    if (player.gameboard.ships.length == 0) {
+      player.instance.randomPopulate();
+    } else if (player.gameboard.ships.length < SHIPS.length) {
+      return { status: 400, data: { error: "Not all ships have been placed" } };
+    }
   }
 
   player.ready = true;
 
   // In multiplayer, wait for both players to be ready
   if (session.isMultiplayer) {
-    const allReady = Array.from(session.participants.values())
-      .filter((p) => p.type === "human")
-      .every((p) => p.ready);
-
+    const allReady = Array.from(session.participants.values()).every(p => p.ready);
     if (!allReady) {
       return {
         status: 200,
-        data: { message: "Waiting for other player to be ready" },
+        data: { 
+          success: true, 
+          message: "Waiting for other players to be ready",
+          ready: true 
+        },
       };
     }
   }

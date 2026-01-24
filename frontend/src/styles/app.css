@@ -18,7 +18,7 @@ header {
   margin-bottom: 20px;
 }
 
-header button {
+header button, .lobby-controls button {
   background-color: rgb(36, 36, 36);
   font-size: 15px;
   font-weight: bold;
@@ -37,11 +37,13 @@ header div {
   gap: 15px;
 }
 
-header button:enabled:hover {
+header button:enabled:hover,
+.lobby-controls button:enabled:hover {
   transform: scale(1.02);
 }
 
-header button:enabled:active {
+header button:enabled:active,
+.lobby-controls button:enabled:active {
   transform: scale(0.98);
 }
 
