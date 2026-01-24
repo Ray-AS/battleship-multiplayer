@@ -4,7 +4,7 @@ interface LobbyProps {
   setJoinId: (id: string) => void;
   setJoinMode: (mode: boolean) => void;
   onCreateNewGame: (isMulti: boolean) => void;
-  onJoinGame: () => void;
+  onJoinGame: (joinId: string) => Promise<void>;
 }
 
 export default function Lobby({
@@ -39,10 +39,9 @@ export default function Lobby({
               placeholder="Enter Game ID"
               value={joinId}
               onChange={(e) => setJoinId(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onJoinGame()}
             />
             <div className="button-group">
-              <button onClick={onJoinGame}>Join</button>
+              <button onClick={() => onJoinGame}>Join</button>
               <button onClick={() => setJoinMode(false)}>Cancel</button>
             </div>
           </>

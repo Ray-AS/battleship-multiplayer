@@ -1,8 +1,24 @@
 import { useEffect } from "react";
 import { socket } from "../socket";
 import { calculateWinner } from "../utils/helpers";
+import type { Board, GameState, PlayerType } from "../models";
 
-export function useSocketConnection({
+interface useSocketParams {
+  MY_ID: string;
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
+  setReadyStatus: React.Dispatch<React.SetStateAction<string>>;
+  setErrorMsg: React.Dispatch<React.SetStateAction<string>>;
+  setPlayerBoard: React.Dispatch<React.SetStateAction<Board>>;
+  setOpponentBoard: React.Dispatch<React.SetStateAction<Board>>;
+  setPendingPlayerBoardUpdate: React.Dispatch<React.SetStateAction<null>>
+  pendingPlayerBoardRef: React.RefObject<null>;
+  pendingOpponentBoardRef: React.RefObject<Board | null>;
+  setPendingWinner: React.Dispatch<React.SetStateAction<PlayerType | null>>;
+  delayRef: React.RefObject<number>;
+  shouldDelayUpdate: (data: any) => boolean;
+}
+
+export function useSocket({
   MY_ID,
   setGameState,
   setReadyStatus,
@@ -15,7 +31,7 @@ export function useSocketConnection({
   setPendingWinner,
   delayRef,
   shouldDelayUpdate,
-}: any) {
+}: useSocketParams) {
   useEffect(() => {
     socket.connect();
 
@@ -137,7 +153,7 @@ export function useSocketConnection({
     });
 
     socket.on("playerJoined", (data) => {
-      setGameState((prev: any) => ({
+      setGameState((prev) => ({
         ...prev,
         participantCount: data.participantCount,
       }));
@@ -145,7 +161,7 @@ export function useSocketConnection({
 
     socket.on("playerReady", () => {
       setReadyStatus("Waiting for others...");
-      setGameState((prev: any) => ({ ...prev, imReady: true }));
+      setGameState((prev) => ({ ...prev, imReady: true }));
     });
 
     socket.on("playerMarkedReady", (data) => {

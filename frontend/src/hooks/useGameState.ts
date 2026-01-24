@@ -1,8 +1,8 @@
 import { useState } from "react";
-import type { GamePhase, PlayerType, PlacementState } from "../models";
+import type { GamePhase, PlayerType, PlacementState, GameState } from "../models";
 
 export function useGameState() {
-  const [gameState, setGameState] = useState({
+  const [gameState, setGameState] = useState<GameState>({
     id: "",
     phase: "setup" as GamePhase,
     isMultiplayer: false,

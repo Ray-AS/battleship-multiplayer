@@ -1,13 +1,13 @@
-import type { Board as BoardT, Cell as CellT, PlayerType } from "../models";
+import type { Board, Cell, PlayerType } from "../models";
 
-export const createEmptyBoard = (): BoardT =>
+export const createEmptyBoard = (): Board =>
   Array.from({ length: 10 }, () =>
     Array.from({ length: 10 }, () => ({ type: "empty" }))
   );
 
-export function calculateWinner(boardData: BoardT): PlayerType {
+export function calculateWinner(boardData: Board): PlayerType {
   const myShipsRemaining = boardData
     ?.flat()
-    .some((cell: CellT) => cell.type === "ship");
+    .some((cell: Cell) => cell.type === "ship");
   return myShipsRemaining ? "Player" : "Computer";
 }

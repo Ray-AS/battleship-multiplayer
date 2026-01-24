@@ -88,3 +88,13 @@ export interface PlaceShipRequest {
   y: number;
   orientation: Orientation;
 }
+
+export interface GameState {
+  id: string;
+  phase: GamePhase;
+  isMultiplayer: boolean;
+  participantCount: number;
+  winner: PlayerType;
+  myTurn: boolean;
+  imReady: boolean;
+}
