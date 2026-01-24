@@ -173,3 +173,17 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 
 - **Unit Tests (Game Logic)**: Ship, Gameboard, Player, Computer classes
 - **Integration Tests**: Controllers, Routes (*Currently a little outdated)
+
+## Future Updates
+
+- Live deployment
+- Persistent game storage (database integration)
+- User authentication and profiles
+- Game history, statistics, and replay functionality
+- Spectator mode
+- Tournament bracket system
+- Different board sizes and ship configurations
+- Sound effects and animations
+- Mobile responsive design
+- AI difficulty levels
+- Chat functionality in multiplayer
