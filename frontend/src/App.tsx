@@ -33,16 +33,27 @@ const createEmptyBoard: () => BoardT = () =>
   );
 
 function App() {
-  const [gameId, setGameId] = useState("");
+  const [gameState, setGameState] = useState({
+    id: "",
+    phase: "setup" as GamePhase,
+    isMultiplayer: false,
+    participantCount: 1,
+    winner: "None" as PlayerType,
+    currentPlayer: "None" as PlayerType,
+    myTurn: false,
+    imReady: false,
+  });
+
+  // const [gameId, setGameId] = useState("");
   const [playerBoard, setPlayerBoard] = useState<BoardT>(createEmptyBoard());
   const [opponentBoard, setOpponentBoard] =
     useState<BoardT>(createEmptyBoard());
-  const [isMultiplayer, setIsMultiplayer] = useState(false);
-  const [participantCount, setParticipantCount] = useState(1);
+  // const [isMultiplayer, setIsMultiplayer] = useState(false);
+  // const [participantCount, setParticipantCount] = useState(1);
 
-  const [phase, setPhase] = useState<GamePhase>("setup");
-  const [currentPlayer, setCurrentPlayer] = useState<PlayerType>("None");
-  const [winner, setWinner] = useState<PlayerType>("None");
+  // const [phase, setPhase] = useState<GamePhase>("setup");
+  // const [currentPlayer, setCurrentPlayer] = useState<PlayerType>("None");
+  // const [winner, setWinner] = useState<PlayerType>("None");
   const [placement, setPlacement] = useState<PlacementState | null>(null);
   const [myTurn, setMyTurn] = useState(false);
 
@@ -54,10 +65,34 @@ function App() {
   const [pendingWinner, setPendingWinner] = useState<PlayerType | null>(null);
   const hasAttackedRef = useRef(false);
   // const [readyStatus, setReadyStatus] = useState<string>("");
-  const [imReady, setImReady] = useState(false);
+  // const [imReady, setImReady] = useState(false);
 
   const [joinMode, setJoinMode] = useState(false);
   const [joinId, setJoinId] = useState("");
+
+  function calculateWinner(boardData: BoardT): PlayerType {
+    const myShipsRemaining = boardData?.flat().some((cell: CellT) => cell.type === "ship");
+    return myShipsRemaining ? "Player" : "Computer";
+  }
+
+  // Only apply delay if:
+  // 1. Single-player mode
+  // 2. Delay is set
+  // 3. Game is in playing phase OR just ended (AI's winning move)
+  // 4. I have made at least one attack (not the initial board state)
+  // 5. No pending update already
+  function shouldDelayUpdate(data: any) {
+    return !data.isMultiplayer &&
+    delayRef.current > 0 &&
+    (data.phase === "playing" || data.phase === "ended") &&
+    hasAttackedRef.current &&
+    !pendingPlayerBoardRef.current;
+  }
+
+  function getStatusMessage() {
+    if (isAIThinking) return "ENEMY ATTACKING...";
+    return myTurn ? "YOU'RE ATTACKING..." : "ENEMY ATTACKING...";
+  }
 
   useEffect(() => {
     socket.connect();
@@ -95,18 +130,7 @@ function App() {
       const opponentId = participantIds.find((id) => id !== MY_ID);
       const opponentBoardData = opponentId ? data.boards[opponentId] : null;
 
-      // Only apply delay if:
-      // 1. Single-player mode
-      // 2. Delay is set
-      // 3. Game is in playing phase OR just ended (AI's winning move)
-      // 4. I have made at least one attack (not the initial board state)
-      // 5. No pending update already
-      const shouldDelay =
-        !data.isMultiplayer &&
-        delayRef.current > 0 &&
-        (data.phase === "playing" || data.phase === "ended") &&
-        hasAttackedRef.current &&
-        pendingPlayerBoardRef.current === null;
+      const shouldDelay = shouldDelayUpdate(data);
 
       if (opponentBoardData) {
         // If game ended and delaying updates, also delay opponent board reveal
@@ -133,10 +157,10 @@ function App() {
 
           // Also delay winner reveal if game ended
           if (data.phase === "ended") {
-            const myShipsRemaining = myBoardData
-              ?.flat()
-              .some((cell: CellT) => cell.type === "ship");
-            setPendingWinner(myShipsRemaining ? "Player" : "Computer");
+            // const myShipsRemaining = myBoardData
+            //   ?.flat()
+            //   .some((cell: CellT) => cell.type === "ship");
+            setPendingWinner(calculateWinner(myBoardData));
           }
 
           delayTimeout = window.setTimeout(() => {
@@ -151,10 +175,10 @@ function App() {
 
             // Set winner after delay if game ended
             if (data.phase === "ended") {
-              const myShipsRemaining = myBoardData
-                ?.flat()
-                .some((cell: CellT) => cell.type === "ship");
-              setWinner(myShipsRemaining ? "Player" : "Computer");
+              // const myShipsRemaining = myBoardData
+              //   ?.flat()
+              //   .some((cell: CellT) => cell.type === "ship");
+              setWinner(calculateWinner(myBoardData));
               setPendingWinner(null);
             }
 
@@ -173,10 +197,10 @@ function App() {
           pendingPlayerBoardRef.current = null;
 
           if (data.phase === "ended") {
-            const myShipsRemaining = myBoardData
-              ?.flat()
-              .some((cell: CellT) => cell.type === "ship");
-            setWinner(myShipsRemaining ? "Player" : "Computer");
+            // const myShipsRemaining = myBoardData
+            //   ?.flat()
+            //   .some((cell: CellT) => cell.type === "ship");
+            setWinner(calculateWinner(myBoardData));
             setPendingWinner(null);
           }
         }
@@ -462,11 +486,7 @@ function App() {
                 <div
                   className={`status-bar ${isAIThinking ? "opponent" : myTurn ? "player" : "opponent"}`}
                 >
-                  {isAIThinking
-                    ? "ENEMY ATTACKING..."
-                    : myTurn
-                      ? "YOU'RE ATTACKING..."
-                      : "ENEMY ATTACKING..."}
+                  {getStatusMessage()}
                 </div>
               </>
             )}
