@@ -154,9 +154,9 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 |--------------|----------------------------------------------------------------|------------------------------------------|
 | `joinGame`   | `{ gameId: string, playerId: string }`                         | Join a game room and sync state          |
 | `startGame`  | `{ gameId: string, playerId: string }`                         | Mark player ready to begin               |
-| `attack`     | `{ gameId: string, attackerId: string, x: number, y: number }` | Attack opponent at coordinates     |
+| `attack`     | `{ gameId: string, attackerId: string, x: number, y: number }` | Attack opponent at coordinates           |
 | `clearShips` | `{ gameId: string, playerId: string }`                         | Clear all placed ships during setup      |
-| `disconnect` | `(automatic)`                                               | Client disconnected from server          |
+| `disconnect` | `(automatic)`                                                  | Client disconnected from server          |
 
 #### Server → Client
 
