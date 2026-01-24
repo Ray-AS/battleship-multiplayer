@@ -12,12 +12,29 @@ import { PlayerContext } from "./components/PlayerContext";
 import { api } from "./api.ts";
 import { v4 as uuidv4 } from 'uuid';
 import { SHIPS } from "./configs.ts";
+import { socket } from "./socket.ts";
+
+function getSessionPlayerId() {
+  const sessionKey = 'bs_session_player_id';
+  let id = sessionStorage.getItem(sessionKey);
+  if (!id) {
+    id = uuidv4();
+    sessionStorage.setItem(sessionKey, id);
+  }
+  return id;
+}
+
+const MY_ID = getSessionPlayerId();
+
+const createEmptyBoard = () => Array.from({ length: 10 }, () => 
+  Array.from({ length: 10 }, () => ({ type: "empty" }))
+);
 
 function App() {
   const [gameId, setGameId] = useState("");
   const [playerBoard, setPlayerBoard] = useState<BoardT>([]);
   const [opponentBoard, setOpponentBoard] = useState<BoardT>([]);
-  const [isMultiplayer, setIsMultiplayer] = useState(false);
+  // const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
 
   const [phase, setPhase] = useState<GamePhase>("setup");
@@ -28,6 +45,30 @@ function App() {
 
   const [readyStatus, setReadyStatus] = useState<string>("");
   const [imReady, setImReady] = useState(false);
+
+  useEffect(() => {
+    socket.connect();
+
+    socket.on("gameState", (data) => {
+
+    });
+
+    socket.on("playerJoined", (data) => {
+
+    });
+
+    socket.on("playerReady", (data) => {
+
+    });
+
+    socket.on("playerMarkedReady", (data) => {
+
+    });
+
+    socket.on("error", (data) => {
+
+    });
+  }, []);
 
   
   // useEffect(() => {
