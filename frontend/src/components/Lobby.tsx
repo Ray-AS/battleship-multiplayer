@@ -32,8 +32,7 @@ export default function Lobby({
             </button>
           </>
         ) : (
-          <>
-            <h3>Join Game</h3>
+          <div className="join-controls">
             <input
               type="text"
               placeholder="Enter Game ID"
@@ -50,7 +49,7 @@ export default function Lobby({
               </button>
               <button onClick={() => setJoinMode(false)}>Cancel</button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
