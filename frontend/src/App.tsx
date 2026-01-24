@@ -155,7 +155,25 @@ function App() {
     };
   }, [delay, pendingPlayerBoardUpdate]);
 
-  
+  async function joinGameRoom(isMulti: boolean) {
+    const id = uuidv4();
+
+    console.log("Joining game room:", { id, isMulti, MY_ID });
+    
+    setGameId(id);
+    setIsMultiplayer(isMulti);
+
+    const res = await api.createGame(id, MY_ID, isMulti);
+    console.log("createGame response:", res);
+
+    if (res.error && res.error !== "Game already exists") {
+      console.log(res.error);
+      return;
+    }
+
+    socket.emit("joinGame", { gameId: id, playerId: MY_ID });
+  }
+
   // useEffect(() => {
   //   let isMounted = true;
 
