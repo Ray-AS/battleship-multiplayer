@@ -174,6 +174,36 @@ function App() {
     socket.emit("joinGame", { gameId: id, playerId: MY_ID });
   }
 
+  async function handleCellClick(position: Position) {
+    if (phase === "setup" && placement) {
+      const res = await api.placeShip(gameId, {
+        playerId: MY_ID,
+        shipModel: SHIPS[placement.index].model,
+        x: position.x,
+        y: position.y,
+        orientation: placement.orientation,
+      });
+
+      if (res.board) {
+        setPlayerBoard(res.board);
+        if (placement.index < SHIPS.length - 1) {
+          setPlacement({ ...placement, index: placement.index + 1 });
+        } else {
+          setPlacement(null);
+        }
+      } else {
+        console.log(res.error || "Invalid Placement");
+      }
+    } else if (phase === "playing" && myTurn) {
+      socket.emit("attack", {
+        gameId,
+        attackerId: MY_ID,
+        x: position.x,
+        y: position.y,
+      });
+    }
+  }
+
   // useEffect(() => {
   //   let isMounted = true;
 

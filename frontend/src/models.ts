@@ -1,4 +1,4 @@
-import { SHIPS } from "./configs"; // Assuming you share or duplicate the config file
+import { SHIPS } from "./configs";
 
 export interface Position {
   x: number;
@@ -7,15 +7,10 @@ export interface Position {
 
 export type Orientation = "horizontal" | "vertical";
 
-/**
- * Matches the backend Cell type. 
- * Note: When 'masked', ship cells are converted to 'empty' by the API.
- */
 export type CellState = "empty" | "miss" | "ship" | "hit";
 
 export interface Cell {
   type: CellState;
-  // ship is only present on the player's own board or when a ship is hit
   ship?: {
     specs: ShipModel;
   };
@@ -23,9 +18,6 @@ export interface Cell {
 
 export type Board = Cell[][];
 
-/**
- * Using a constant object to mirror the backend Outcome enum/const
- */
 export const Outcome = {
   MISS: "miss",
   HIT: "hit",
@@ -39,7 +31,7 @@ export interface AttackOutcome {
   shipInfo?: {
     model: ShipName;
     isSunk: boolean;
-    positions?: Position[]; // Only sent if isSunk is true
+    positions?: Position[];
   };
 }
 
@@ -61,15 +53,10 @@ export interface Move {
   timestamp: number;
 }
 
-/**
- * Helper for the Placement state used in the UI during setup
- */
 export interface PlacementState {
   index: number; 
   orientation: Orientation;
 }
-
-// --- API RESPONSE TYPES ---
 
 export interface GameResponse {
   gameId: string;
@@ -77,7 +64,7 @@ export interface GameResponse {
   turn?: "player" | "computer";
   boards: {
     player: Board;
-    opponent: Board; // This will be the masked version
+    opponent: Board;
   };
 }
 
