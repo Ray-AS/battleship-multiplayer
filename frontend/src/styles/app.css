@@ -18,7 +18,8 @@ header {
   margin-bottom: 20px;
 }
 
-header button, .lobby-controls button {
+header button,
+.lobby-controls button {
   background-color: rgb(36, 36, 36);
   font-size: 15px;
   font-weight: bold;
@@ -26,10 +27,13 @@ header button, .lobby-controls button {
   border-radius: 10px;
   letter-spacing: 1px;
 
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45),
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 header div {
@@ -93,13 +97,15 @@ header button:enabled:active,
 
 .board-label.left.active {
   border-color: #00f2ff;
-  box-shadow: 0 -2px 30px rgba(0, 242, 255, 0.25),
+  box-shadow:
+    0 -2px 30px rgba(0, 242, 255, 0.25),
     0 -2px 10px rgba(0, 242, 255, 0.4);
 }
 
 .board-label.right.active {
   border-color: #ff4d4d;
-  box-shadow: 0 -2px 30px rgba(255, 0, 0, 0.25),
+  box-shadow:
+    0 -2px 30px rgba(255, 0, 0, 0.25),
     0 -2px 10px rgba(255, 0, 0, 0.4);
 }
 
@@ -143,7 +149,9 @@ header button:enabled:active,
   color: #e5e5e5;
   text-align: center;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .settings input[type="number"]:focus {

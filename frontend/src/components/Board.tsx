@@ -42,9 +42,9 @@ export default function Board({
       // Check Overlap
       // Safely access boardData using optional chaining just in case
       const cell = boardData[pos.y]?.[pos.x];
-      return cell && cell.type !== "ship"; 
+      return cell && cell.type !== "ship";
     });
-  };
+  }
 
   function handleMouseEnter(position: Position) {
     // Only calculate preview if we are in setup mode on the player board
@@ -55,7 +55,10 @@ export default function Board({
       // Generate the array of cells the ship would occupy
       for (let i = 0; i < ship.length; i++) {
         cells.push({
-          x: placement.orientation === "horizontal" ? position.x + i : position.x,
+          x:
+            placement.orientation === "horizontal"
+              ? position.x + i
+              : position.x,
           y: placement.orientation === "vertical" ? position.y + i : position.y,
         });
       }
@@ -74,9 +77,9 @@ export default function Board({
   function handleCellClick(position: Position) {
     // Block the click if we are placing a ship and it's invalid
     if (phase === "setup" && placement && !isValidPlacement) {
-      return; 
+      return;
     }
-    
+
     // Otherwise, pass the click up to the parent
     onInteract(position);
   }
@@ -93,7 +96,7 @@ export default function Board({
           // 2. Setup: disable enemy board, or player board if not placing
           // 3. Playing: disable player board, or enemy board if not player's turn
           let disabled = false;
-          if(phase === "ended") {
+          if (phase === "ended") {
             disabled = true;
           } else if (phase === "setup") {
             disabled = playerRole === "Computer" || !placement;
@@ -111,7 +114,7 @@ export default function Board({
               state={cell.type}
               position={position}
               disabled={disabled}
-              hide={playerRole === "Computer" && phase !== "ended"} 
+              hide={playerRole === "Computer" && phase !== "ended"}
               preview={isPreview}
               previewInvalid={isPreview && !isValidPlacement}
               interact={() => handleCellClick(position)}
@@ -119,7 +122,7 @@ export default function Board({
               mouseLeave={() => handleMouseLeave()}
             />
           );
-        })
+        }),
       )}
     </div>
   );

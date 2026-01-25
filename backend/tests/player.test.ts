@@ -32,14 +32,9 @@ describe("Player class", () => {
     player.randomPopulate();
 
     const snapshot = player.gameboard.getSnapshot();
-    const shipCells = snapshot
-      .flat()
-      .filter((cell) => cell.type === "ship");
+    const shipCells = snapshot.flat().filter((cell) => cell.type === "ship");
 
-    const totalShipLength = SHIPS.reduce(
-      (sum, ship) => sum + ship.length,
-      0,
-    );
+    const totalShipLength = SHIPS.reduce((sum, ship) => sum + ship.length, 0);
 
     expect(shipCells.length).toBe(totalShipLength);
   });
@@ -50,9 +45,7 @@ describe("Player class", () => {
 
     const snapshot = player.gameboard.getSnapshot();
     snapshot.forEach((row) =>
-      row.forEach((cell) =>
-        expect(["empty", "ship"]).toContain(cell.type),
-      ),
+      row.forEach((cell) => expect(["empty", "ship"]).toContain(cell.type)),
     );
   });
 

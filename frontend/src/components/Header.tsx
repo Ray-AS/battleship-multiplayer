@@ -36,7 +36,6 @@ export default function Header({
   onPlaceManually,
   onResetGame,
 }: HeaderProps) {
-  
   function getStatusMessage() {
     if (isAIThinking) return "ENEMY ATTACKING...";
     return gameState.myTurn ? "YOU'RE ATTACKING..." : "ENEMY ATTACKING...";
@@ -45,7 +44,7 @@ export default function Header({
   return (
     <header>
       <h1>Battleship</h1>
-      
+
       {gameState.isMultiplayer && (
         <div className="game-id-badge">
           Room: {gameState.id}
@@ -129,7 +128,11 @@ export default function Header({
           )}
           <div
             className={`status-bar ${
-              isAIThinking ? "opponent" : gameState.myTurn ? "player" : "opponent"
+              isAIThinking
+                ? "opponent"
+                : gameState.myTurn
+                  ? "player"
+                  : "opponent"
             }`}
           >
             {getStatusMessage()}

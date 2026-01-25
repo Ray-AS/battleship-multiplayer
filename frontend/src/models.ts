@@ -54,7 +54,7 @@ export interface Move {
 }
 
 export interface PlacementState {
-  index: number; 
+  index: number;
   orientation: Orientation;
 }
 
@@ -142,7 +142,9 @@ export interface StartGameResponseStarted {
   gameStarted: true;
 }
 
-export type StartGameResponse = StartGameResponseReady | StartGameResponseStarted;
+export type StartGameResponse =
+  | StartGameResponseReady
+  | StartGameResponseStarted;
 
 // export interface AttackResponse {
 //   playerAttack: AttackResult;

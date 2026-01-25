@@ -4,12 +4,14 @@ import { createEmptyBoard } from "../utils/helpers";
 
 export function useBoardUpdates() {
   const [playerBoard, setPlayerBoard] = useState<BoardT>(createEmptyBoard());
-  const [opponentBoard, setOpponentBoard] = useState<BoardT>(createEmptyBoard());
-  
+  const [opponentBoard, setOpponentBoard] =
+    useState<BoardT>(createEmptyBoard());
+
   const [delay, setDelay] = useState(1);
   const delayRef = useRef(1);
-  
-  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] = useState(null);
+
+  const [pendingPlayerBoardUpdate, setPendingPlayerBoardUpdate] =
+    useState(null);
   const pendingPlayerBoardRef = useRef(null);
   const pendingOpponentBoardRef = useRef<BoardT | null>(null);
   const [pendingWinner, setPendingWinner] = useState<PlayerType | null>(null);
@@ -23,7 +25,7 @@ export function useBoardUpdates() {
       hasAttackedRef.current &&
       !pendingPlayerBoardRef.current
     );
-  };
+  }
 
   const isAIThinking = pendingPlayerBoardUpdate !== null;
 

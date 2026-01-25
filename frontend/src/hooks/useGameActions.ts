@@ -2,7 +2,13 @@ import { v4 as uuidv4 } from "uuid";
 import { api } from "../api";
 import { socket } from "../socket";
 import { SHIPS } from "../configs";
-import type { Board, GameState, PlacementState, PlayerType, Position } from "../models";
+import type {
+  Board,
+  GameState,
+  PlacementState,
+  PlayerType,
+  Position,
+} from "../models";
 import { createEmptyBoard } from "../utils/helpers";
 
 interface UseGameActionsParams {
@@ -16,7 +22,7 @@ interface UseGameActionsParams {
   placement: PlacementState | null;
   setPlacement: React.Dispatch<React.SetStateAction<PlacementState | null>>;
   pendingPlayerBoardUpdate: null;
-  setPendingPlayerBoardUpdate: React.Dispatch<React.SetStateAction<null>>
+  setPendingPlayerBoardUpdate: React.Dispatch<React.SetStateAction<null>>;
   pendingPlayerBoardRef: React.RefObject<null>;
   setPendingWinner: React.Dispatch<React.SetStateAction<PlayerType | null>>;
   setJoinMode: React.Dispatch<React.SetStateAction<boolean>>;
@@ -44,7 +50,6 @@ export function useGameActions({
   setJoinId,
   hasAttackedRef,
 }: UseGameActionsParams) {
-  
   async function createNewGame(isMulti: boolean) {
     const id = uuidv4();
     console.log("Creating new game:", { id, isMulti, MY_ID });
@@ -121,7 +126,7 @@ export function useGameActions({
         orientation: placement.orientation,
       });
 
-      if("error" in res) {
+      if ("error" in res) {
         setErrorMsg(res.error || "Invalid Placement");
         return;
       }

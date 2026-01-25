@@ -2,7 +2,7 @@ import type { Board, Cell, PlayerType } from "../models";
 
 export const createEmptyBoard = (): Board =>
   Array.from({ length: 10 }, () =>
-    Array.from({ length: 10 }, () => ({ type: "empty" }))
+    Array.from({ length: 10 }, () => ({ type: "empty" })),
   );
 
 export function calculateWinner(boardData: Board): PlayerType {

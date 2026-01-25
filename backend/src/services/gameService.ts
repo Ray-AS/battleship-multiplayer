@@ -52,7 +52,7 @@ class GameService {
       ]),
     };
 
-    if(!isMultiplayer) {
+    if (!isMultiplayer) {
       const computer = new Computer();
 
       // Setup initial AI state

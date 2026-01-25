@@ -12,23 +12,30 @@ import { MY_ID } from "./utils/session";
 function App() {
   const gameStateHook = useGameState();
   const boardHook = useBoardUpdates();
-  
-  useSocket({ MY_ID, ...gameStateHook, ...boardHook });
-  
-  const { createNewGame, joinExistingGame, handleCellClick, handleStartGame, handlePlaceManually, resetGame } = 
-    useGameActions({ MY_ID, ...gameStateHook, ...boardHook });
 
-  const canInteract = !boardHook.isAIThinking && 
-    gameStateHook.gameState.myTurn && 
+  useSocket({ MY_ID, ...gameStateHook, ...boardHook });
+
+  const {
+    createNewGame,
+    joinExistingGame,
+    handleCellClick,
+    handleStartGame,
+    handlePlaceManually,
+    resetGame,
+  } = useGameActions({ MY_ID, ...gameStateHook, ...boardHook });
+
+  const canInteract =
+    !boardHook.isAIThinking &&
+    gameStateHook.gameState.myTurn &&
     gameStateHook.gameState.phase === "playing";
 
   return (
     <>
-      <NotificationBanners 
+      <NotificationBanners
         errorMsg={gameStateHook.errorMsg}
         readyStatus={gameStateHook.readyStatus}
       />
-      
+
       {!gameStateHook.gameState.id ? (
         <Lobby
           joinMode={gameStateHook.joinMode}
@@ -40,7 +47,7 @@ function App() {
         />
       ) : (
         <>
-          <Header 
+          <Header
             gameState={gameStateHook.gameState}
             placement={gameStateHook.placement}
             setPlacement={gameStateHook.setPlacement}

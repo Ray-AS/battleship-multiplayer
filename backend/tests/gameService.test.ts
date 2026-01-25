@@ -30,7 +30,9 @@ describe("GameService", () => {
 
   test("getMaskedBoard hides AI ships", () => {
     const session = gameService.createGame(gameId);
-    const masked = gameService.getMaskedBoard(session.participants.get("computer")!.gameboard);
+    const masked = gameService.getMaskedBoard(
+      session.participants.get("computer")!.gameboard,
+    );
     masked.forEach((row) => {
       row.forEach((cell) => {
         expect(cell.type).not.toBe("ship");

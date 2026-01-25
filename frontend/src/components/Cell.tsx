@@ -52,8 +52,8 @@ export default function Cell({
   const previewClass = previewInvalid
     ? "preview-invalid"
     : preview
-    ? "preview-valid"
-    : "";
+      ? "preview-valid"
+      : "";
 
   return (
     <button

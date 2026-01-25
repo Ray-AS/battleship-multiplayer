@@ -50,7 +50,7 @@ export async function createGame(
     if (!session) {
       session = gameService.createGame(sessionId, playerId, isMultiplayer);
     }
-    
+
     const human = session.participants.get(playerId);
     const participantIds = Array.from(session.participants.keys());
     const opponentId = participantIds.find((id) => id !== playerId);
@@ -160,7 +160,7 @@ export async function startGame(sessionId: string, playerId: string) {
     };
   }
 
-  if(player.type === "human") {
+  if (player.type === "human") {
     if (player.gameboard.ships.length == 0) {
       player.instance.randomPopulate();
     } else if (player.gameboard.ships.length < SHIPS.length) {
@@ -172,14 +172,16 @@ export async function startGame(sessionId: string, playerId: string) {
 
   // In multiplayer, wait for both players to be ready
   if (session.isMultiplayer) {
-    const allReady = Array.from(session.participants.values()).every(p => p.ready);
+    const allReady = Array.from(session.participants.values()).every(
+      (p) => p.ready,
+    );
     if (!allReady) {
       return {
         status: 200,
-        data: { 
-          success: true, 
+        data: {
+          success: true,
           message: "Waiting for other players to be ready",
-          ready: true 
+          ready: true,
         },
       };
     }

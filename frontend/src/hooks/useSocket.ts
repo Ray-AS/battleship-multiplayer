@@ -10,7 +10,7 @@ interface useSocketParams {
   setErrorMsg: React.Dispatch<React.SetStateAction<string>>;
   setPlayerBoard: React.Dispatch<React.SetStateAction<Board>>;
   setOpponentBoard: React.Dispatch<React.SetStateAction<Board>>;
-  setPendingPlayerBoardUpdate: React.Dispatch<React.SetStateAction<null>>
+  setPendingPlayerBoardUpdate: React.Dispatch<React.SetStateAction<null>>;
   pendingPlayerBoardRef: React.RefObject<null>;
   pendingOpponentBoardRef: React.RefObject<Board | null>;
   setPendingWinner: React.Dispatch<React.SetStateAction<PlayerType | null>>;

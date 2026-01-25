@@ -1,5 +1,10 @@
 import Board from "./Board";
-import type { Board as BoardT, GamePhase, PlacementState, Position } from "../models";
+import type {
+  Board as BoardT,
+  GamePhase,
+  PlacementState,
+  Position,
+} from "../models";
 
 interface GameBoardsProps {
   playerBoard: BoardT;
