@@ -37,7 +37,7 @@ export async function getGame(sessionId: string, playerId: string) {
 export async function createGame(
   sessionId: string,
   playerId: string,
-  isMultiplayer: boolean,
+  isMultiplayer: boolean = false,
 ) {
   const emptyBoard = Array.from({ length: DEFAULT_BOARD_SIZE }, () =>
     Array.from({ length: DEFAULT_BOARD_SIZE }, () => ({ type: "empty" })),
