@@ -31,3 +31,6 @@ Promise<{
     };
 }>
 ```
+
+- Redux
+        - Game State

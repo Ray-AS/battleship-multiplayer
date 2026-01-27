@@ -1,4 +1,6 @@
 import "./styles/app.css";
+import "./styles/themes.css";
+import Settings from "./components/Settings";
 import Lobby from "./components/Lobby";
 import Header from "./components/Header";
 import GameBoards from "./components/GameBoards";
@@ -8,10 +10,14 @@ import { useBoardUpdates } from "./hooks/useBoardUpdates";
 import { useSocket } from "./hooks/useSocket";
 import { useGameActions } from "./hooks/useGameActions";
 import { MY_ID } from "./utils/session";
+import { useSelector } from "react-redux";
+import type { RootState } from "./state/store";
 
 function App() {
   const gameStateHook = useGameState();
   const boardHook = useBoardUpdates();
+  const theme = useSelector((state: RootState) => state.preferences.theme);
+  const gridStyle = useSelector((state: RootState) => state.preferences.gridStyle);
 
   useSocket({ MY_ID, ...gameStateHook, ...boardHook });
 
@@ -30,7 +36,9 @@ function App() {
     gameStateHook.gameState.phase === "playing";
 
   return (
-    <>
+    <div className={`app theme-${theme} grid-${gridStyle}`}>
+      <Settings />
+
       <NotificationBanners
         errorMsg={gameStateHook.errorMsg}
         readyStatus={gameStateHook.readyStatus}
@@ -71,7 +79,7 @@ function App() {
           />
         </>
       )}
-    </>
+    </div>
   );
 }
 

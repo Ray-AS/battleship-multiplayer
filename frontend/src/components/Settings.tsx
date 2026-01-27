@@ -1,6 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { setTheme, setGridStyle, toggleCoordinates, type Theme, type GridStyle } from '../state/slices/preferencesSlice';
 import type { RootState } from '../state/store';
+import "../styles/settings.css";
 
 export default function Settings() {
   const preferences = useSelector((state: RootState) => state.preferences);

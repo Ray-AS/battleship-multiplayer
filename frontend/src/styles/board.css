@@ -2,6 +2,47 @@
   --board-size: 450px;
 }
 
+.board-container {
+  position: relative;
+  display: inline-block;
+}
+
+.coordinate-labels {
+  position: absolute;
+  display: flex;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 0.85rem;
+  user-select: none;
+}
+
+.coordinate-labels.top {
+  top: -30px;
+  left: 0;
+  width: 100%;
+}
+
+.coordinate-labels.left {
+  left: -30px;
+  top: 0;
+  flex-direction: column;
+  height: 100%;
+}
+
+.coordinate-labels .label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: var(--cell-size, 40px);
+  min-height: var(--cell-size, 40px);
+}
+
+.coordinate-labels .corner {
+  width: 30px;
+  height: 30px;
+}
+
 .board {
   display: grid;
   width: var(--board-size);

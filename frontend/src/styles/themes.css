@@ -1,0 +1,47 @@
+.theme-classic {
+  --bg-color: #1a2332;
+  --board-bg: #2d3e50;
+  --grid-color: #4a6278;
+  --cell-empty: #34495e;
+  --cell-ship: #3498db;
+  --cell-hit: #e74c3c;
+  --cell-miss: #95a5a6;
+  --text-color: #ecf0f1;
+}
+
+.theme-ocean {
+  --bg-color: #0a192f;
+  --board-bg: #112240;
+  --grid-color: #233554;
+  --cell-empty: #1d3557;
+  --cell-ship: #457b9d;
+  --cell-hit: #e63946;
+  --cell-miss: #a8dadc;
+  --text-color: #f1faee;
+}
+
+.grid-lines .cell {
+  border: 1px solid var(--grid-color);
+}
+
+.grid-dots .cell {
+  border: none;
+  position: relative;
+}
+
+.grid-dots .cell::before {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--grid-color);
+  border-radius: 50%;
+  top: -1px;
+  left: -1px;
+  opacity: 0.6;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+}

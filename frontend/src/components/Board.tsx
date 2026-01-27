@@ -8,6 +8,8 @@ import {
 } from "../models.ts";
 import { useState } from "react";
 import { SHIPS } from "../configs.ts";
+import { useSelector } from "react-redux";
+import type { RootState } from "../state/store.ts";
 
 interface boardProps {
   playerRole: "Player" | "Computer";
@@ -26,6 +28,7 @@ export default function Board({
   placement,
   myTurn = false,
 }: boardProps) {
+  const showCoordinates = useSelector((state: RootState) => state.preferences.showCoordinates);
   const [hoveredCells, setHoveredCells] = useState<Position[]>([]);
   const [isValidPlacement, setIsValidPlacement] = useState(true);
 
@@ -84,46 +87,74 @@ export default function Board({
     onInteract(position);
   }
 
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+  const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
   return (
-    <div className="board">
-      {boardData.map((row, y) =>
-        row.map((cell, x) => {
-          const position = { x, y };
-          const isPreview = hoveredCells.some((p) => p.x === x && p.y === y);
+    <div className="board-box">
+      {showCoordinates && (
+        <>
+          {/* Top letter labels */}
+          <div className="coordinate-labels top">
+            <div className="corner"></div>
+            {letters.map((letter) => (
+              <div key={letter} className="label">
+                {letter}
+              </div>
+            ))}
+          </div>
 
-          // Disable logic:
-          // 1. Always disable if game ended
-          // 2. Setup: disable enemy board, or player board if not placing
-          // 3. Playing: disable player board, or enemy board if not player's turn
-          let disabled = false;
-          if (phase === "ended") {
-            disabled = true;
-          } else if (phase === "setup") {
-            disabled = playerRole === "Computer" || !placement;
-          } else if (phase === "playing") {
-            if (playerRole === "Player") {
-              disabled = true;
-            } else {
-              disabled = !myTurn;
-            }
-          }
-
-          return (
-            <Cell
-              key={`${x}-${y}`}
-              state={cell.type}
-              position={position}
-              disabled={disabled}
-              hide={playerRole === "Computer" && phase !== "ended"}
-              preview={isPreview}
-              previewInvalid={isPreview && !isValidPlacement}
-              interact={() => handleCellClick(position)}
-              mouseEnter={() => handleMouseEnter(position)}
-              mouseLeave={() => handleMouseLeave()}
-            />
-          );
-        }),
+          {/* Left number labels */}
+          <div className="coordinate-labels left">
+            {numbers.map((num) => (
+              <div key={num} className="label">
+                {num}
+              </div>
+            ))}
+          </div>
+        </>
       )}
+
+      <div className="board">
+        {boardData.map((row, y) =>
+          row.map((cell, x) => {
+            const position = { x, y };
+            const isPreview = hoveredCells.some((p) => p.x === x && p.y === y);
+
+            // Disable logic:
+            // 1. Always disable if game ended
+            // 2. Setup: disable enemy board, or player board if not placing
+            // 3. Playing: disable player board, or enemy board if not player's turn
+            let disabled = false;
+            if (phase === "ended") {
+              disabled = true;
+            } else if (phase === "setup") {
+              disabled = playerRole === "Computer" || !placement;
+            } else if (phase === "playing") {
+              if (playerRole === "Player") {
+                disabled = true;
+              } else {
+                disabled = !myTurn;
+              }
+            }
+
+            return (
+              <Cell
+                key={`${x}-${y}`}
+                state={cell.type}
+                position={position}
+                disabled={disabled}
+                hide={playerRole === "Computer" && phase !== "ended"}
+                preview={isPreview}
+                previewInvalid={isPreview && !isValidPlacement}
+                interact={() => handleCellClick(position)}
+                mouseEnter={() => handleMouseEnter(position)}
+                mouseLeave={() => handleMouseLeave()}
+              />
+            );
+          }),
+        )}
+      </div>
     </div>
   );
 }

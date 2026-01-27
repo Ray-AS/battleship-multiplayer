@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import preferencesReducer from "./slices/preferencesSlice";
 
 export const store = configureStore({
-  reducer: {},
+  reducer: {preferences: preferencesReducer},
 });
 
 export type RootState = ReturnType<typeof store.getState>;
