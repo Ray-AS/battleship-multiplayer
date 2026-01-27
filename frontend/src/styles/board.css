@@ -16,14 +16,14 @@
   user-select: none;
 }
 
-.coordinate-labels.top {
-  top: -30px;
+.coordinate-labels.bottom {
+  bottom: -40px;
   left: 0;
   width: 100%;
 }
 
 .coordinate-labels.left {
-  left: -30px;
+  left: -40px;
   top: 0;
   flex-direction: column;
   height: 100%;
@@ -34,13 +34,8 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  min-width: var(--cell-size, 40px);
-  min-height: var(--cell-size, 40px);
-}
-
-.coordinate-labels .corner {
-  width: 30px;
-  height: 30px;
+  min-width: calc(var(--board-size) / 10);
+  min-height: calc(var(--board-size) / 10);
 }
 
 .board {
@@ -50,7 +45,7 @@
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
   border-radius: 5px;
-  box-shadow: 0 0 8px 2px rgba(186, 186, 186, 0.6);
+  box-shadow: var(--board-shadow);
 }
 
 button {
@@ -65,7 +60,7 @@ button {
   align-items: center;
   width: 100%;
   height: 100%;
-  background-color: rgb(37, 46, 66);
+  background-color: var(--cell-empty);
   font-size: 25px;
   font-weight: bolder;
   cursor: crosshair;
@@ -75,13 +70,13 @@ button {
 }
 
 .cell:enabled:hover {
-  box-shadow: 0 0 8px 2px rgba(105, 23, 23, 0.6);
+  box-shadow: var(--cell-hover);
   transform: scale(1.01);
 }
 
 .cell:enabled:active {
   transform: scale(0.99);
-  box-shadow: 0 0 8px 2px rgba(90, 40, 40, 0.6);
+  box-shadow: var(--cell-hover);
 }
 
 .cell:disabled {
@@ -89,20 +84,20 @@ button {
 }
 
 .cell:disabled:hover {
-  box-shadow: 0 0 8px 2px rgba(186, 186, 186, 0.6);
+  box-shadow: var(--board-shadow);
   transform: scale(1.01);
 }
 
 .cell.hit {
-  background-color: rgb(112, 66, 66);
+  background-color: var(--cell-hit);
 }
 
 .cell.miss {
-  background-color: rgb(47, 47, 47);
+  background-color: var(--cell-miss);
 }
 
 .cell.ship {
-  background-color: rgb(36, 36, 36);
+  background-color: var(--cell-ship);
 }
 
 .cell.preview-valid {

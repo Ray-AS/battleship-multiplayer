@@ -94,8 +94,7 @@ export default function Board({
     <div className="board-box">
       {showCoordinates && (
         <>
-          {/* Top letter labels */}
-          <div className="coordinate-labels top">
+          <div className="coordinate-labels bottom">
             <div className="corner"></div>
             {letters.map((letter) => (
               <div key={letter} className="label">
@@ -104,7 +103,6 @@ export default function Board({
             ))}
           </div>
 
-          {/* Left number labels */}
           <div className="coordinate-labels left">
             {numbers.map((num) => (
               <div key={num} className="label">
