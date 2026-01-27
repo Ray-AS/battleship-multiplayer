@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type Theme = 'classic' | 'ocean';
-export type GridStyle = 'lines' | 'dots';
+export type GridStyle = 'lines' | 'none';
 
 interface PreferenceState {
   theme: Theme;
@@ -11,7 +11,7 @@ interface PreferenceState {
 
 const initialState: PreferenceState = {
   theme: 'classic',
-  gridStyle: 'dots',
+  gridStyle: 'none',
   showCoordinates: true,
 };
 

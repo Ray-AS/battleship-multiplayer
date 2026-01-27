@@ -37,8 +37,8 @@ export default function Settings() {
             Lines
           </button>
           <button
-            className={preferences.gridStyle === 'dots' ? 'active' : ''}
-            onClick={() => dispatch(setGridStyle('dots' as GridStyle))}
+            className={preferences.gridStyle === 'none' ? 'active' : ''}
+            onClick={() => dispatch(setGridStyle('none' as GridStyle))}
           >
             Dots
           </button>
