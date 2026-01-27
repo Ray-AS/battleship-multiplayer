@@ -43,8 +43,8 @@
 }
 
 .button-group button.active {
-  background: #00f2ff;
-  border-color: #00f2ff;
+  background: #ffffff;
+  border-color: #ffffff;
   color: #131313;
 }
 
@@ -61,7 +61,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #00f2ff;
+  accent-color: #ffffff;
 }
 
 .checkbox-label span {
