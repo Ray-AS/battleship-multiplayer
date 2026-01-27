@@ -2,7 +2,7 @@
 
 A modern, full-stack implementation of the classic Battleship game with both single-player (vs AI) and multiplayer modes.
 
-![Creating and joining multiplayer game and making three moves](assets/example.gif)
+![Creating and joining multiplayer game and making three moves](assets/example2.gif)
 
 ## Features
 
@@ -11,6 +11,7 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 - **Interactive Grid**: Place ships manually or automatically populate your board
 - **Modifiable Game Speed**: Choose how long the AI takes to attack, making for lightning fast or slow and methodical gameplay
 - **Real-time Updates**: Instant feedback via WebSocket communication
+- **User Preferences**: Customize how you want your game to look with themes, grid styles, and coordinates
 
 ## Tech Stack
 
@@ -25,6 +26,7 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 ### Frontend
 
 - **Framework**: React
+- **State Management**: Redux
 - **Language**: TypeScript
 - **Styling**: Custom CSS
 - **Build Tool**: Vite

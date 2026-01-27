@@ -40,7 +40,7 @@ export default function Settings() {
             className={preferences.gridStyle === 'none' ? 'active' : ''}
             onClick={() => dispatch(setGridStyle('none' as GridStyle))}
           >
-            Dots
+            None
           </button>
         </div>
       </div>
