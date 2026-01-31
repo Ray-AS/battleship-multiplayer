@@ -21,7 +21,6 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 - **Real-time Handling**: Socket.IO
 - **Language**: TypeScript
 - **API Documentation**: Swagger/OpenAPI
-- **Testing**: Vitest
 
 ### Frontend
 
@@ -30,6 +29,11 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 - **Language**: TypeScript
 - **Styling**: Custom CSS
 - **Build Tool**: Vite
+
+### Testing
+
+- **Unit & Integration**: Vitest
+- **End-To-End**: Playwright
 
 ## Getting Started
 
@@ -47,43 +51,27 @@ A modern, full-stack implementation of the classic Battleship game with both sin
     cd battleship-multiplayer
     ```
 
-2. **Install backend dependencies**
+2. **Install dependencies**
 
     ```bash
-    cd backend
-    npm install
-    ```
-
-3. **Install frontend dependencies**
-
-    ```bash
-    cd ../frontend
-    npm install
+    npm run install:all
     ```
 
 ### Running the application
 
-1. **Start the backend server**
+1. **Start the backend server and frontend client**
 
     ```bash
-    cd backend
     npm run dev
     ```
 
     Server runs on `http://localhost:3000`
-  
-2. **Start the frontend instance (in a new terminal)**
-
-    ```bash
-    cd frontend
-    npm run dev
-    ```
 
     Client runs on `http://localhost:5173`
   
-3. **Open your browser**: Navigate to `http://localhost:5173`
+2. **Open your browser**: Navigate to `http://localhost:5173`
     - Play against an AI
-    - Create another client instance to play multiplayer
+    - Open another tab and navigate to same URL to play multiplayer
 
 ## How to Play
 
@@ -173,8 +161,29 @@ A modern, full-stack implementation of the classic Battleship game with both sin
 
 ## Testing
 
+### Backend Tests (Vitest)
+
 - **Unit Tests (Game Logic)**: Ship, Gameboard, Player, Computer classes
-- **Integration Tests**: Controllers, Routes (*Currently a little outdated)
+- **Integration Tests**: Controllers, Routes
+
+```bash
+cd backend
+npm run test
+```
+
+### End-to-End Tests (Playwright)
+
+- **Complete game flows**: Singleplayer and multiplayer gameplay
+- **Ship placement validation**: Manual placement with boundary and overlap checks
+- **Real-time multiplayer**: Two-player game creation, joining, and turn-based gameplay
+
+```bash
+npm run test # Default
+npm run test:ui # Interactive dashboard to run tests
+npm run test:headed # Visible browser to observe tests
+npm run test:debug # Step through tests
+npm run test:report # Shows HTML report after run
+```
 
 ## Future Updates
 
