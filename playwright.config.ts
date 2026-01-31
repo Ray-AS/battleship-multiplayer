@@ -36,20 +36,18 @@ export default defineConfig({
 
   webServer: [
     {
-      // Frontend (Vite)
+      // Frontend
       command: 'cd frontend && npm run dev',
       url: 'http://localhost:5173',
-      port: 5173,
       timeout: 120000,
       reuseExistingServer: !process.env.CI,
       stdout: 'ignore',
       stderr: 'pipe',
     },
     {
-      // Backend (Fastify)
+      // Backend
       command: 'cd backend && npm run dev',
       url: 'http://localhost:3000',
-      port: 3000,
       timeout: 120000,
       reuseExistingServer: !process.env.CI,
       stdout: 'ignore',
