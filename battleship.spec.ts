@@ -268,3 +268,107 @@ test('manual ship placement with hover validation', async({page}) => {
   await page.waitForSelector('.status-bar', { timeout: 5000 });
   await expect(page.locator('.status-bar')).toBeVisible();
 });
+
+test('multiplayer game creation and joining', async ({browser}) => {
+  test.setTimeout(60000);
+  
+  // Create two separate browser contexts for two players
+  const context1 = await browser.newContext();
+  const context2 = await browser.newContext();
+  const player1Page = await context1.newPage();
+  const player2Page = await context2.newPage();
+
+  try {
+    // PLAYER 1: Create multiplayer game
+    await player1Page.goto('http://localhost:5173');
+    await player1Page.click('button:has-text("Create Multiplayer Game")');
+    await waitForBoardReady(player1Page);
+    
+    await expect(player1Page.locator('.game-id-badge')).toBeVisible();
+    
+    // Get game ID for player 2 to use
+    const gameIdBadge = await player1Page.locator('.game-id-badge').textContent();
+    const gameIdMatch = gameIdBadge?.match(/Room: ([a-f0-9-]+)/);
+    expect(gameIdMatch).toBeTruthy();
+    const gameId = gameIdMatch![1];
+    
+    await expect(player1Page.locator('.game-id-badge')).toContainText('1/2 players');
+    
+    const readyButton = player1Page.locator('button.start-btn');
+    await expect(readyButton).toBeVisible({ timeout: 3000 });
+    
+    const isDisabled = await readyButton.isDisabled();
+    expect(isDisabled).toBe(true);
+    
+    // PLAYER 2: Join the game
+    await player2Page.goto('http://localhost:5173');
+    await player2Page.click('button:has-text("Join Multiplayer Game")');
+    
+    await player2Page.fill('input[placeholder="Enter Game ID"]', gameId);
+    await player2Page.click('button:has-text("Join")');
+    
+    await waitForBoardReady(player2Page);
+    
+    await expect(player2Page.locator('.game-id-badge')).toContainText(gameId);
+    
+    // Wait for participant count to update to 2/2 on both clients
+    await expect(player1Page.locator('.game-id-badge')).toContainText('2/2 players', { timeout: 5000 });
+    await expect(player2Page.locator('.game-id-badge')).toContainText('2/2 players', { timeout: 5000 });
+    
+    // Now both "I'm Ready" buttons should be enabled
+    await expect(player1Page.locator('button.start-btn')).toBeEnabled({ timeout: 3000 });
+    await expect(player2Page.locator('button.start-btn')).toBeEnabled({ timeout: 3000 });
+    
+    // Player 1 marks ready (ships are auto-populated if not manually placed)
+    await player1Page.click('button.start-btn');
+    
+    // Player 1 should see "Waiting for opponent..." 
+    await player1Page.waitForTimeout(500);
+    const player1ButtonText = await player1Page.locator('button.start-btn').textContent();
+    expect(player1ButtonText).toContain('Waiting');
+    
+    // Player 2 marks ready
+    await player2Page.click('button.start-btn');
+    
+    // Both should transition to playing phase
+    await expect(player1Page.locator('.status-bar')).toBeVisible({ timeout: 5000 });
+    await expect(player2Page.locator('.status-bar')).toBeVisible({ timeout: 5000 });
+    
+    // Verify turn-based gameplay (i.e. one should be attacking, other defending)
+    const player1Status = await player1Page.locator('.status-bar').textContent();
+    const player2Status = await player2Page.locator('.status-bar').textContent();
+    
+    // One should say "YOU'RE ATTACKING" and other "ENEMY ATTACKING"
+    const statuses = [player1Status, player2Status];
+    const hasAttacker = statuses.some(s => s?.includes('YOU\'RE ATTACKING'));
+    const hasDefender = statuses.some(s => s?.includes('ENEMY ATTACKING'));
+    
+    expect(hasAttacker).toBe(true);
+    expect(hasDefender).toBe(true);
+    
+    // Make one attack to verify turn switching works
+    if (player1Status?.includes('YOU\'RE ATTACKING')) {
+      // Player 1's turn: attack an empty cell on opponent board
+      const opponentBoard = player1Page.locator('.board-wrapper').nth(1).locator('.board');
+      await opponentBoard.locator('.cell.empty:not([disabled])').first().click();
+      
+      await player1Page.waitForTimeout(1500);
+      
+      // Turn should now switch to Player 2
+      await expect(player2Page.locator('.status-bar')).toContainText('YOU\'RE ATTACKING', { timeout: 3000 });
+    } else {
+      // Player 2's turn
+      const opponentBoard = player2Page.locator('.board-wrapper').nth(1).locator('.board');
+      await opponentBoard.locator('.cell.empty:not([disabled])').first().click();
+      
+      await player2Page.waitForTimeout(1500);
+      
+      // Turn should switch to Player 1
+      await expect(player1Page.locator('.status-bar')).toContainText('YOU\'RE ATTACKING', { timeout: 3000 });
+    }
+    
+  } finally {
+    await context1.close();
+    await context2.close();
+  }
+});
